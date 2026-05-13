@@ -1,0 +1,4 @@
+flet
+flet-video
+# vex core - install from git or local
+# git+https://github.com/AKMessi/vex.git
