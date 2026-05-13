@@ -1,0 +1,103 @@
+name: Build macOS App
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet flet-video keyring moviepy yt-dlp pillow opencv-python-headless
+
+      - name: Prepare icon
+        run: |
+          mkdir -p assets
+          # Convert PNG to ICNS if needed
+          if [ -f "assets/icon.png" ]; then
+            echo "Icon found"
+          else
+            echo "Warning: No icon.png found. Using default."
+          fi
+
+      - name: Build macOS app with Flet
+        run: |
+          flet build macos \
+            --name "Vex" \
+            --product-name "Vex Desktop Video Editor" \
+            --copyright "© 2026 Drew Purdy" \
+            --bundle-id "com.drewpurdy.vex" \
+            --icon assets/icon.icns \
+            --verbose
+
+      - name: Create DMG installer
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "Vex" \
+            --volicon assets/icon.icns \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --icon "Vex.app" 200 190 \
+            --hide-extension "Vex.app" \
+            --app-drop-link 600 185 \
+            --no-internet-enable \
+            "Vex.dmg" \
+            "build/macos"/
+
+      - name: Create PKG installer (optional)
+        run: |
+          pkgbuild --component "build/macos/Vex.app" \
+                   --install-location "/Applications" \
+                   --identifier "com.drewpurdy.vex" \
+                   --version "${GITHUB_REF#refs/tags/v}" \
+                   --root "/" \
+                   "Vex.pkg" || echo "PKG creation skipped"
+
+      - name: Notarize and Staple (requires secrets)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "Notarizing..."
+          xcrun notarytool submit "Vex.dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "Vex.dmg"
+          echo "Notarization complete."
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vex-macOS-Installers
+          path: |
+            Vex.dmg
+            Vex.pkg
+            build/macos/Vex.app
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Vex.dmg
+            Vex.pkg
+          generate_release_notes: true
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
