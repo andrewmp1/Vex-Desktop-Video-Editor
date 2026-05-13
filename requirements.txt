@@ -1,4 +1,12 @@
 flet
 flet-video
-# vex core - install from git or local
-# git+https://github.com/AKMessi/vex.git
+keyring
+moviepy
+ffmpeg-python
+openai
+anthropic
+google-generativeai
+yt-dlp
+pillow
+opencv-python-headless
+pexels-api
