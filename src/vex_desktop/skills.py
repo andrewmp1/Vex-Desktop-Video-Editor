@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -211,6 +212,51 @@ class SkillState:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         payload = {"enabled": list(self.enabled), "seeded": bool(self.seeded)}
         self.path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def bundled_skills_dir() -> Path:
+    from vex_desktop.platform_support import repo_root
+
+    candidates: list[Path] = []
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidates.append(Path(meipass) / "assets" / "skills")
+    root = repo_root()
+    candidates.append(root / "assets" / "skills")
+    candidates.append(root / "_internal" / "assets" / "skills")
+    for path in candidates:
+        if path.is_dir():
+            return path
+    return root / "assets" / "skills"
+
+
+def maybe_seed_bundled_skills(
+    store: SkillStore,
+    state: SkillState,
+    bundled: Path | str | None = None,
+) -> None:
+    """Copy packaged examples into the store once. Never reseed after deletion."""
+    if state.seeded:
+        return
+    src_root = Path(bundled) if bundled is not None else bundled_skills_dir()
+    store.skills_dir.mkdir(parents=True, exist_ok=True)
+    if src_root.is_dir():
+        existing = {child.name for child in store.skills_dir.iterdir()}
+        for child in sorted(src_root.iterdir(), key=lambda path: path.name.lower()):
+            if child.is_dir():
+                key = child.name
+            elif child.is_file() and child.suffix.lower() == ".md":
+                key = child.stem
+            else:
+                continue
+            if key in existing or f"{key}.md" in existing:
+                continue
+            try:
+                store.import_path(child)
+            except (FileNotFoundError, ValueError, OSError):
+                continue
+    state.seeded = True
+    state.save()
 
 
 def compose_preamble(

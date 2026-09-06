@@ -89,6 +89,7 @@ class MainWindow(QMainWindow):
         file_menu.addMenu(self._make_export_menu("&Export", remember=True))
         file_menu.addSeparator()
         file_menu.addAction(self._action("Settings…", self._open_settings))
+        file_menu.addAction(self._action("Skills…", self._open_skills))
         file_menu.addSeparator()
         file_menu.addAction(self._action("Quit", self.close, QKeySequence.StandardKey.Quit))
 
@@ -120,6 +121,7 @@ class MainWindow(QMainWindow):
         bar.addWidget(export_button)
         bar.addSeparator()
         bar.addAction(self._action("Settings", self._open_settings))
+        bar.addAction(self._action("Skills", self._open_skills))
         self.addToolBar(bar)
 
     def _make_export_menu(self, title: str, remember: bool = False) -> QMenu:
@@ -217,6 +219,14 @@ class MainWindow(QMainWindow):
         dialog.save_secrets()
         provider, model = dialog.values()
         self._agent.set_config(provider, model)
+
+    @Slot()
+    def _open_skills(self) -> None:
+        from vex_desktop.ui.skills_dialog import SkillsDialog
+
+        dialog = SkillsDialog(self, self._agent)
+        self._skills_dialog = dialog
+        dialog.exec()
 
     @Slot(object)
     def _on_progress(self, event: ProgressEvent) -> None:

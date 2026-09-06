@@ -22,6 +22,11 @@ from vex_desktop.protocol import (
 def _service(tmp_path: Path, monkeypatch) -> AgentService:
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "share"))
     monkeypatch.setenv("HOME", str(tmp_path))
+    from vex_desktop.platform_support import data_dir
+
+    root = data_dir()
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "skills.json").write_text('{"enabled": [], "seeded": true}\n', encoding="utf-8")
     return AgentService(StubBackend())
 
 

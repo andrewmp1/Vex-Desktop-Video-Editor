@@ -15,7 +15,7 @@ from vex_desktop.agent.stub import StubBackend
 from vex_desktop.exporting import looks_like_export
 from vex_desktop.platform_support import data_dir
 from vex_desktop.protocol import OPS, AgentResult, ProgressEvent
-from vex_desktop.skills import SkillState, SkillStore, compose_preamble
+from vex_desktop.skills import SkillState, SkillStore, compose_preamble, maybe_seed_bundled_skills
 
 
 ProgressFn = Callable[[ProgressEvent], None]
@@ -43,6 +43,7 @@ class AgentService:
         root = data_dir()
         self._store = SkillStore(root / "skills")
         self._state = SkillState(root)
+        maybe_seed_bundled_skills(self._store, self._state)
 
     @property
     def backend_name(self) -> str:
@@ -105,16 +106,23 @@ class AgentService:
 
     def _catalog(self) -> list[dict]:
         enabled = set(self._state.enabled)
-        return [
-            {
-                "id": info.id,
-                "name": info.name,
-                "description": info.description,
-                "enabled": info.id in enabled,
-                "chars": info.chars,
-            }
-            for info in self._store.scan()
-        ]
+        rows: list[dict] = []
+        for info in self._store.scan():
+            try:
+                body = self._store.body(info)
+            except OSError:
+                body = ""
+            rows.append(
+                {
+                    "id": info.id,
+                    "name": info.name,
+                    "description": info.description,
+                    "enabled": info.id in enabled,
+                    "chars": info.chars,
+                    "body": body,
+                }
+            )
+        return rows
 
     def _skills_result(self, op: str, message: str) -> AgentResult:
         return AgentResult(

@@ -90,6 +90,21 @@ def main() -> int:
             app.processEvents()
             _save(window, args.out / "loaded-sample.png")
 
+    from vex_desktop.ui.skills_dialog import SkillsDialog
+
+    dialog = SkillsDialog(window, window._agent)
+    dialog.resize(860, 520)
+    dialog.show()
+    _wait(app, lambda: not window._agent.busy)
+    app.processEvents()
+    if dialog._list.count() >= 1:
+        dialog._list.setCurrentRow(0)
+    app.processEvents()
+    time.sleep(0.2)
+    app.processEvents()
+    _save(dialog, args.out / "skills.png")
+    dialog.close()
+
     window._agent.shutdown()
     return 0
 

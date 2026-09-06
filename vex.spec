@@ -22,6 +22,7 @@ a = Analysis(
         (str(ROOT / "src" / "vex_desktop" / "ui" / "theme.qss"), "vex_desktop/ui"),
         (str(ROOT / "src" / "vex_desktop" / "ui" / "icon.png"), "vex_desktop/ui"),
         (str(ROOT / "assets" / "icon.png"), "assets"),
+        (str(ROOT / "assets" / "skills"), "assets/skills"),
     ],
     hiddenimports=[
         "PySide6.QtMultimedia",
