@@ -7,13 +7,15 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable
+from pathlib import Path
 
 from vex_desktop.agent.backend import AgentBackend
 from vex_desktop.agent.core import VexCoreBackend, is_core_available
 from vex_desktop.agent.errors import AgentError, CoreUnavailable
 from vex_desktop.agent.stub import StubBackend
 from vex_desktop.exporting import looks_like_export
-from vex_desktop.platform_support import data_dir
+from vex_desktop.bundle import pack_project_dir, pack_working_file, unpack_bundle
+from vex_desktop.platform_support import data_dir, vex_projects_dir
 from vex_desktop.protocol import OPS, AgentResult, ProgressEvent
 from vex_desktop.skills import SkillState, SkillStore, compose_preamble, maybe_seed_bundled_skills
 
@@ -102,6 +104,10 @@ class AgentService:
             return self._remove_skill(str(payload.get("id") or ""))
         if op == "set_skills":
             return self._set_skills(payload.get("ids"))
+        if op == "pack_project":
+            return self._pack_project(str(payload.get("output_path") or ""))
+        if op == "unpack_project":
+            return self._unpack_project(str(payload.get("path") or ""), emit)
         raise AgentError(f"Unhandled op: {op}")
 
     def _catalog(self) -> list[dict]:
@@ -220,3 +226,42 @@ class AgentService:
         if unknown:
             message += f". Unknown skill ids ignored: {', '.join(unknown)}"
         return self._skills_result("set_skills", message)
+
+    def _pack_project(self, output_path: str) -> AgentResult:
+        dest = Path(output_path.strip())
+        if not output_path.strip():
+            raise AgentError("Choose a .vex path.")
+        snapshot = self._backend.snapshot()
+        project_id = (snapshot.project_id or "").strip()
+        if project_id:
+            folder = vex_projects_dir() / project_id
+            if folder.is_dir():
+                pack_project_dir(folder, dest, project_id)
+                return AgentResult(
+                    op="pack_project",
+                    success=True,
+                    message=f"Saved project to {dest}",
+                    snapshot=snapshot,
+                    exported_path=str(dest),
+                )
+        working = snapshot.working_file
+        if working:
+            pid = project_id or Path(working).stem
+            pack_working_file(working, dest, pid)
+            return AgentResult(
+                op="pack_project",
+                success=True,
+                message=f"Saved project to {dest}",
+                snapshot=self._backend.snapshot(),
+                exported_path=str(dest),
+            )
+        raise AgentError("Load a video before saving a project.")
+
+    def _unpack_project(self, path: str, emit: ProgressFn) -> AgentResult:
+        if not path.strip():
+            raise AgentError("Project file not found.")
+        info = unpack_bundle(path, vex_projects_dir())
+        result = self._backend.load_project(str(info["load_path"]), emit)
+        result.op = "unpack_project"
+        result.message = f"Opened project {info['project_id']}"
+        return result

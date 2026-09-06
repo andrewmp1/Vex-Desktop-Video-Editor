@@ -35,11 +35,11 @@ def _write_md(path: Path, name: str, body: str, description: str = "") -> None:
     path.write_text(f"---\nname: {name}\n{desc}---\n{body}", encoding="utf-8")
 
 
-def test_protocol_version_is_2():
-    assert PROTOCOL_VERSION == 2
+def test_protocol_version_is_3():
+    assert PROTOCOL_VERSION == 3
     for op in ("list_skills", "import_skill", "remove_skill", "set_skills"):
         assert op in OPS
-    assert AgentRequest(op="list_skills").to_dict()["protocol"] == 2
+    assert AgentRequest(op="list_skills").to_dict()["protocol"] == 3
 
 
 def test_agent_result_skills_round_trip():

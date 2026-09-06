@@ -85,6 +85,8 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self._action("Open Video…", self._choose_video, QKeySequence.StandardKey.Open))
         file_menu.addAction(self._action("Open YouTube URL…", self._choose_youtube))
         file_menu.addAction(self._action("Open Project…", self._choose_project))
+        file_menu.addAction(self._action("Open Project File…", self._open_project_file))
+        file_menu.addAction(self._action("Save Project…", self._save_project))
         file_menu.addSeparator()
         file_menu.addMenu(self._make_export_menu("&Export", remember=True))
         file_menu.addSeparator()
@@ -218,6 +220,35 @@ class MainWindow(QMainWindow):
         else:
             self._open_source(project["project_id"])
 
+    @Slot()
+    def _save_project(self) -> None:
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Project",
+            "",
+            "Vex project (*.vex)",
+        )
+        if not path:
+            return
+        dest = Path(path)
+        if dest.suffix.lower() != ".vex":
+            dest = dest.with_suffix(".vex")
+        self._chat.append_system(f"Saving {dest.name}…")
+        self._agent.pack_project(str(dest))
+
+    @Slot()
+    def _open_project_file(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Project File",
+            "",
+            "Vex project (*.vex)",
+        )
+        if not path:
+            return
+        self._chat.append_system(f"Opening {Path(path).name}…")
+        self._agent.unpack_project(path)
+
     def open_source(self, source: str) -> None:
         self._open_source(source)
 
@@ -299,7 +330,14 @@ class MainWindow(QMainWindow):
         if not result.success:
             return
         video = result.exported_path or result.new_video or result.snapshot.working_file
-        if video and result.op in {"load_project", "process_command", "undo", "redo", "export"}:
+        if video and result.op in {
+            "load_project",
+            "process_command",
+            "undo",
+            "redo",
+            "export",
+            "unpack_project",
+        }:
             if not str(video).lower().endswith(".mp3"):
                 self._preview.load(video)
 

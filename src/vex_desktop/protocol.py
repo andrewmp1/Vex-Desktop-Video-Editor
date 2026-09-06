@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 3
 
 OPS = (
     "load_project",
@@ -24,6 +24,8 @@ OPS = (
     "import_skill",
     "remove_skill",
     "set_skills",
+    "pack_project",
+    "unpack_project",
 )
 
 

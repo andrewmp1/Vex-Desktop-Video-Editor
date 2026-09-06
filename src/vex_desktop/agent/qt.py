@@ -102,6 +102,12 @@ class AgentClient(QObject):
     def set_skills(self, ids: list[str]) -> None:
         self._submit("set_skills", {"ids": list(ids)})
 
+    def pack_project(self, output_path: str) -> None:
+        self._submit("pack_project", {"output_path": output_path})
+
+    def unpack_project(self, path: str) -> None:
+        self._submit("unpack_project", {"path": path})
+
     def export(self, preset: str = "youtube_1080p", output_path: str | None = None) -> None:
         payload: dict = {"preset": preset}
         if output_path:
