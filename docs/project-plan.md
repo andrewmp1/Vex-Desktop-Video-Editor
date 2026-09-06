@@ -4,7 +4,7 @@
 
 **Last updated:** 2026-09-06
 
-This document is the implementation guide. Architecture details live in [ARCHITECTURE.md](ARCHITECTURE.md). Stack choices live in [TECH_DECISIONS.md](TECH_DECISIONS.md). The agent API lives in [API_WRAPPER_SPEC.md](API_WRAPPER_SPEC.md).
+This document is the implementation guide. Architecture details live in [ARCHITECTURE.md](ARCHITECTURE.md). Stack choices live in [TECH_DECISIONS.md](TECH_DECISIONS.md). The agent API lives in [API_WRAPPER_SPEC.md](API_WRAPPER_SPEC.md). Feature specs and TDD plans live under [superpowers/](superpowers/README.md).
 
 Do not start a later work item until its **Depends on** items are done and its **Verify** command has been run.
 
@@ -93,7 +93,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 - Private GitHub repo, `src/vex_desktop` package, docs, PyInstaller spec, tag workflow sketch
 - PySide6 editor: preview, chat, timeline, dark Fusion theme, drag-and-drop
-- Toolbar: Open Video, YouTube, Project, Export, Settings
+- Toolbar: Open Video, YouTube, Project, Export, Skills, Settings
 - Frozen protocol + `AgentService` + stub/core backends; UI uses `AgentClient` only
 - Core backend talks to local Vex (`VideoAgent`, `create_project`, YouTube URL, `tools.export.execute`)
 - Secrets via `keyring` (file fallback); Settings dialog
@@ -107,6 +107,10 @@ VEX_CORE_PATH=~/claude_work/vex \
 - macOS DMG script + CI (`scripts/build_dmg.sh` → `dist/Vex.dmg`; notarize skipped without secrets)
 - GitHub Release on `v*` tags attaches AppImage, DMG, and `SHA256SUMS`
 - User guide (`docs/user-guide.md`, linked from README)
+- Visual timeline filmstrip (thumbnails from the working file; history list unchanged)
+- Skills system (local markdown instructions; inject on `process_command` only)
+- Edit menu/toolbar: Add subtitles, Insert B-roll…, Add a simple effect
+- `.vex` project bundle (File → Save/Open Project File; protocol v3 pack/unpack)
 - Automated tests: UI smoke + screenshots, stub export, core+ffmpeg export (skip in desktop venv)
 - Layout fixes verified via `tests/screenshots/`
 - App icon (`assets/icon.png`, window + PyInstaller)
@@ -114,7 +118,8 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 ### Not done
 
-- Visual timeline (thumbnails), `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
+- Ollama as a first-class run mode
+- Manual core check that an enabled skill (e.g. `youtube-metadata`) changes LLM title behavior
 
 ### Known limits (not bugs to “fix” unless specified)
 
@@ -256,10 +261,23 @@ Do these only after P7, and only if still wanted:
 | Item | Notes |
 |------|--------|
 | Ollama | Settings already has an `ollama` provider; wire `VexCoreBackend.set_config` to Vex `PROVIDER=ollama` and confirm with a local model |
-| B-roll / subtitles / effects | Chat `process_command` already reaches `VideoAgent.run`; no extra op unless the UI needs dedicated buttons |
-| Visual timeline | Thumbnails from working file; keep using `snapshot.history` as source of truth |
-| `.vex` bundle | Optional zip of a Vex project dir; CLI already uses folder JSON |
+| B-roll / subtitles / effects | **Done:** Edit menu/toolbar actions send `process_command` (B-roll picks a file) |
+| Visual timeline | **Done:** filmstrip from `working_file`; `snapshot.history` is still the edit list |
+| Skills | **Done** (wrapper): see work item below. Core-LLM behavior check remains manual. |
+| `.vex` bundle | **Done:** `pack_project` / `unpack_project`; File → Save/Open Project File |
 | Gatekeeper notarization | Only if unsigned GitHub DMGs are blocked; not App Store |
+
+### Skills system — **done** (stub/protocol; core title-behavior check is manual later)
+
+**Goal:** Users add, preview, and toggle local Agent Skills that inject into `process_command` only.
+
+| | |
+|--|--|
+| **Depends on** | Agent protocol + `AgentClient` (existing); visual timeline optional |
+| **Files** | `src/vex_desktop/skills.py`, `src/vex_desktop/ui/skills_dialog.py`, `protocol.py`, `agent/service.py`, `agent/qt.py`, `ui/main_window.py`, `assets/skills/`, `tests/test_skills.py`, docs |
+| **Steps** | SkillStore/SkillState/compose_preamble; protocol v2 ops (`list_skills`, `import_skill`, `remove_skill`, `set_skills`); inject preamble in `AgentService.handle("process_command")`; Skills dialog via AgentClient only; seed `youtube-metadata` and `tiktok-format` once; docs. |
+| **Verify** | `QT_QPA_PLATFORM=offscreen VEX_AGENT_BACKEND=stub pytest` (includes skills + export routing). Stub chat shows injected preamble when a skill is enabled. |
+| **Done when** | Stub/protocol green; export/undo/redo/load unchanged. Manual core check that an enabled skill changes LLM output (e.g. title formula) is **not** claimed here — do that later on Linux with `VEX_AGENT_BACKEND=core`. |
 
 ---
 
@@ -272,6 +290,10 @@ Do these only after P7, and only if still wanted:
 | UI export | `pytest tests/test_export.py::test_ui_export_from_toolbar` + `tests/screenshots/exported-sample.png` |
 | Real encode | Vex venv + `test_core_export_encodes_sample` (ffprobe 1920×1080 h264) |
 | Live edit | Core GUI: open local file, chat trim, preview path changes, undo |
+| Skills (stub) | `QT_QPA_PLATFORM=offscreen VEX_AGENT_BACKEND=stub pytest` (skills + export still route) |
+| Edit actions | `pytest tests/test_edit_actions.py` |
+| `.vex` pack/unpack | `pytest tests/test_bundle.py` |
+| Skills (core title behavior) | Manual later: enable `youtube-metadata`, confirm proposed title changes |
 | AppImage | P5 verify |
 | Release | P7 GitHub assets |
 

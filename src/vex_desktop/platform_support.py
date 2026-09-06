@@ -82,6 +82,18 @@ def ffmpeg_path() -> str | None:
     return shutil.which("ffmpeg")
 
 
+def ffprobe_path() -> str | None:
+    override = os.environ.get("FFPROBE_PATH")
+    if override:
+        return override
+    ffmpeg = ffmpeg_path()
+    if ffmpeg:
+        sibling = Path(ffmpeg).with_name("ffprobe")
+        if sibling.is_file():
+            return str(sibling)
+    return shutil.which("ffprobe")
+
+
 def get_secret(name: str) -> str | None:
     try:
         import keyring

@@ -64,9 +64,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(splitter)
 
         self._preview.file_dropped.connect(self._open_source)
+        self._preview.position_changed.connect(self._timeline.set_playhead)
         self._chat.command_submitted.connect(self._on_command)
         self._timeline.undo_requested.connect(self._agent.undo)
         self._timeline.redo_requested.connect(self._agent.redo)
+        self._timeline.seek_requested.connect(self._preview.seek)
 
         self._build_menu()
         self._build_toolbar()
@@ -74,6 +76,7 @@ class MainWindow(QMainWindow):
         self._chat.focus_input()
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+        self._timeline.shutdown()
         self._agent.shutdown()
         super().closeEvent(event)
 
@@ -82,10 +85,13 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self._action("Open Video…", self._choose_video, QKeySequence.StandardKey.Open))
         file_menu.addAction(self._action("Open YouTube URL…", self._choose_youtube))
         file_menu.addAction(self._action("Open Project…", self._choose_project))
+        file_menu.addAction(self._action("Open Project File…", self._open_project_file))
+        file_menu.addAction(self._action("Save Project…", self._save_project))
         file_menu.addSeparator()
         file_menu.addMenu(self._make_export_menu("&Export", remember=True))
         file_menu.addSeparator()
         file_menu.addAction(self._action("Settings…", self._open_settings))
+        file_menu.addAction(self._action("Skills…", self._open_skills))
         file_menu.addSeparator()
         file_menu.addAction(self._action("Quit", self.close, QKeySequence.StandardKey.Quit))
 
@@ -93,6 +99,9 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self._action("Undo", self._agent.undo, QKeySequence.StandardKey.Undo))
         edit_menu.addAction(self._action("Redo", self._agent.redo, QKeySequence.StandardKey.Redo))
         edit_menu.addAction(self._action("Cancel", self._agent.cancel, QKeySequence.StandardKey.Cancel))
+        edit_menu.addSeparator()
+        self._edit_acts = self._edit_command_actions()
+        edit_menu.addActions(self._edit_acts)
 
         help_menu = self.menuBar().addMenu("&Help")
         help_menu.addAction(self._action("About", self._about))
@@ -116,7 +125,17 @@ class MainWindow(QMainWindow):
         export_button.setMenu(self._make_export_menu("Export"))
         bar.addWidget(export_button)
         bar.addSeparator()
+        edit_button = QToolButton()
+        edit_button.setText("Edit")
+        edit_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        edit_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        edit_menu = QMenu("Edit", self)
+        edit_menu.addActions(self._edit_acts)
+        edit_button.setMenu(edit_menu)
+        bar.addWidget(edit_button)
+        bar.addSeparator()
         bar.addAction(self._action("Settings", self._open_settings))
+        bar.addAction(self._action("Skills", self._open_skills))
         self.addToolBar(bar)
 
     def _make_export_menu(self, title: str, remember: bool = False) -> QMenu:
@@ -129,6 +148,37 @@ class MainWindow(QMainWindow):
             if remember:
                 self._export_actions.append(action)
         return menu
+
+    def _edit_command_actions(self) -> list[QAction]:
+        return [
+            self._action("Add subtitles", self._add_subtitles),
+            self._action("Insert B-roll…", self._insert_broll),
+            self._action("Add a simple effect", self._add_simple_effect),
+        ]
+
+    def _send_edit_command(self, command: str) -> None:
+        self._chat.append_user(command)
+        self._agent.process_command(command)
+
+    @Slot()
+    def _add_subtitles(self) -> None:
+        self._send_edit_command("Add subtitles")
+
+    @Slot()
+    def _add_simple_effect(self) -> None:
+        self._send_edit_command("Add a subtle zoom effect")
+
+    @Slot()
+    def _insert_broll(self) -> None:
+        filters = " ".join(f"*{s}" for s in sorted(VIDEO_SUFFIXES))
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Insert B-roll",
+            "",
+            f"Video files ({filters})",
+        )
+        if path:
+            self._send_edit_command(f"Insert B-roll from {path}")
 
     def _action(self, text: str, slot, shortcut=None) -> QAction:
         action = QAction(text, self)
@@ -169,6 +219,35 @@ class MainWindow(QMainWindow):
             self._open_source(str(project["working_file"]))
         else:
             self._open_source(project["project_id"])
+
+    @Slot()
+    def _save_project(self) -> None:
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Project",
+            "",
+            "Vex project (*.vex)",
+        )
+        if not path:
+            return
+        dest = Path(path)
+        if dest.suffix.lower() != ".vex":
+            dest = dest.with_suffix(".vex")
+        self._chat.append_system(f"Saving {dest.name}…")
+        self._agent.pack_project(str(dest))
+
+    @Slot()
+    def _open_project_file(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Project File",
+            "",
+            "Vex project (*.vex)",
+        )
+        if not path:
+            return
+        self._chat.append_system(f"Opening {Path(path).name}…")
+        self._agent.unpack_project(path)
 
     def open_source(self, source: str) -> None:
         self._open_source(source)
@@ -215,6 +294,14 @@ class MainWindow(QMainWindow):
         provider, model = dialog.values()
         self._agent.set_config(provider, model)
 
+    @Slot()
+    def _open_skills(self) -> None:
+        from vex_desktop.ui.skills_dialog import SkillsDialog
+
+        dialog = SkillsDialog(self, self._agent)
+        self._skills_dialog = dialog
+        dialog.exec()
+
     @Slot(object)
     def _on_progress(self, event: ProgressEvent) -> None:
         self._chat.set_progress(event.message)
@@ -243,7 +330,14 @@ class MainWindow(QMainWindow):
         if not result.success:
             return
         video = result.exported_path or result.new_video or result.snapshot.working_file
-        if video and result.op in {"load_project", "process_command", "undo", "redo", "export"}:
+        if video and result.op in {
+            "load_project",
+            "process_command",
+            "undo",
+            "redo",
+            "export",
+            "unpack_project",
+        }:
             if not str(video).lower().endswith(".mp3"):
                 self._preview.load(video)
 

@@ -37,6 +37,7 @@ def window(qtbot, screenshot_dir):
     win.show()
     qtbot.waitExposed(win)
     yield win
+    win._timeline.shutdown()
     win._agent.shutdown()
 
 

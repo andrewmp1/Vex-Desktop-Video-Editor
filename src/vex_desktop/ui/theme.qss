@@ -70,6 +70,16 @@ QLabel#historyItem {
     border-radius: 6px;
 }
 
+QFrame#timelineThumb {
+    background-color: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+}
+
+QFrame#timelineThumb[current="true"] {
+    border: 2px solid #6aa9ff;
+}
+
 QLabel#chatWho {
     color: #8a8a8a;
     font-size: 11px;
@@ -187,6 +197,25 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 
 QDialog {
     background-color: #1a1a1a;
+}
+
+QFrame#skillRow {
+    background-color: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+QFrame#skillRow[selected="true"] {
+    background-color: #2a3a55;
+    border-color: #3d5a99;
+}
+
+QLabel#skillsTrustNotice, QLabel#skillsEmptyHint {
+    color: #8a8a8a;
+}
+
+QLabel#skillsEmptyHint {
+    font-size: 15px;
 }
 
 QComboBox {

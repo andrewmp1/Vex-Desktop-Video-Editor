@@ -10,6 +10,9 @@ if not _ffmpeg:
         "ffmpeg not found. Install it on PATH or place a static binary at vendor/ffmpeg before pyinstaller vex.spec."
     )
 BINARIES = [(str(_ffmpeg), ".")]
+_ffprobe = Path(str(_ffmpeg)).with_name("ffprobe")
+if _ffprobe.is_file():
+    BINARIES.append((str(_ffprobe), "."))
 
 a = Analysis(
     [str(ROOT / "main.py")],
@@ -19,6 +22,7 @@ a = Analysis(
         (str(ROOT / "src" / "vex_desktop" / "ui" / "theme.qss"), "vex_desktop/ui"),
         (str(ROOT / "src" / "vex_desktop" / "ui" / "icon.png"), "vex_desktop/ui"),
         (str(ROOT / "assets" / "icon.png"), "assets"),
+        (str(ROOT / "assets" / "skills"), "assets/skills"),
     ],
     hiddenimports=[
         "PySide6.QtMultimedia",

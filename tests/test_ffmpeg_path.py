@@ -61,9 +61,29 @@ def test_ffmpeg_path_finds_pyinstaller_internal(tmp_path, monkeypatch):
     assert ffmpeg_path() == str(bundled)
 
 
+def test_ffprobe_path_uses_ffmpeg_sibling(tmp_path, monkeypatch):
+    from vex_desktop.platform_support import ffprobe_path
+
+    fake_app = tmp_path / "Vex"
+    fake_app.write_bytes(b"")
+    bundled = tmp_path / "ffmpeg"
+    bundled.write_bytes(b"")
+    bundled.chmod(0o755)
+    probe = tmp_path / "ffprobe"
+    probe.write_bytes(b"")
+    probe.chmod(0o755)
+
+    monkeypatch.setattr(sys, "executable", str(fake_app))
+    _clear_ffmpeg_env(monkeypatch, tmp_path)
+    monkeypatch.delenv("FFPROBE_PATH", raising=False)
+
+    assert ffprobe_path() == str(probe)
+
+
 def test_spec_collects_ffmpeg():
     spec = Path(__file__).resolve().parents[1] / "vex.spec"
     text = spec.read_text(encoding="utf-8")
     assert "BINARIES" in text
     assert "vendor" in text
     assert "shutil.which" in text
+    assert "ffprobe" in text
