@@ -1,24 +1,15 @@
-import flet as ft
-import flet_video as ftv
-import threading
-import os
-from datetime import datetime
+"""Optional checkout launcher. Prefer `vex-desktop` or `python -m vex_desktop` after `pip install -e ".[dev]"`."""
 
-# Stub for full Vex integration - in real push this would include full vex_core
-class VexAgent:
-    def process_command(self, cmd):
-        return type('obj', (object,), {'summary': f'Processed: {cmd}', 'new_video': None})()
+from __future__ import annotations
 
-def main(page: ft.Page):
-    page.title = "Vex Desktop Video Editor"
-    page.theme_mode = ft.ThemeMode.DARK
-    page.window_width = 1400
-    page.window_height = 900
-    
-    # Layout code for preview, chat, timeline, history, etc.
-    # (Full implementation would be here - this is placeholder for structure)
-    
-    page.add(ft.Text("Vex Desktop - Full implementation pushed!"))
+import sys
+from pathlib import Path
+
+src = Path(__file__).resolve().parent / "src"
+if str(src) not in sys.path:
+    sys.path.insert(0, str(src))
+
+from vex_desktop.app import run
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    raise SystemExit(run())

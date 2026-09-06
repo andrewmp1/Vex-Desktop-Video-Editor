@@ -1,21 +1,52 @@
 # Vex Desktop Video Editor
 
-A beautiful Flet-based macOS desktop app wrapping the powerful Vex AI video editing agent.
+Linux and macOS desktop app wrapping the Vex AI video editing agent. The UI is **PySide6** (Qt 6). Windows is not a target.
 
-## Features
-- Natural language video editing via AI chat
-- Real-time video preview with flet-video
-- Visual timeline with thumbnails
-- Project management
-- Undo/Redo visual history stack
-- Workflow wizards
-- YouTube import
-- Advanced export
+The window is a client of a Qt-free `AgentService`. Edits can run on a **stub** backend (UI work) or on a local Vex checkout (**core**).
 
-## Quick Start
+Followable roadmap: [docs/project-plan.md](docs/project-plan.md).
+
+## Install and run
+
 ```bash
 git clone https://github.com/andrewmp1/Vex-Desktop-Video-Editor.git
 cd Vex-Desktop-Video-Editor
-pip install -r requirements.txt
-flet run main.py
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+VEX_AGENT_BACKEND=stub vex-desktop
 ```
+
+Equivalent: `python -m vex_desktop`. Toolbar: **Open Video**, **YouTube**, **Project**, **Export**. Chat `export for youtube` uses the same agent op.
+
+## Tests and screenshots
+
+```bash
+source .venv/bin/activate
+pytest
+python scripts/capture_ui.py
+```
+
+Offscreen by default (`QT_QPA_PLATFORM=offscreen`). PNGs land in `tests/screenshots/`.
+
+## Run against a local Vex install
+
+Use the Vex virtualenv so FFmpeg/LLM dependencies match the CLI. Do not attach `core` to a project while a CLI encode is running on it.
+
+```bash
+source ~/claude_work/vex/.venv/bin/activate
+pip install -e ".[dev]"
+cd /path/to/Vex-Desktop-Video-Editor
+VEX_CORE_PATH=~/claude_work/vex VEX_AGENT_BACKEND=core vex-desktop
+```
+
+## Packaging
+
+PyInstaller cannot cross-compile. Build on each OS, then attach the files to a GitHub Release. No Mac App Store.
+
+```bash
+pyinstaller vex.spec
+```
+
+- Linux: `dist/Vex/` (wrap as AppImage for download)
+- macOS: `dist/Vex.app` (wrap as a DMG for download)

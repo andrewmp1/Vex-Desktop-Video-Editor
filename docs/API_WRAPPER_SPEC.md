@@ -1,39 +1,48 @@
-# API Wrapper Specification
+# Agent protocol
 
-## `VexAgent` Class
+The GUI talks only to `AgentClient`. It never constructs a Vex class and never imports `vex_core`.
 
-This wrapper turns the original Vex CLI agent into a clean, callable library for the Flet GUI.
-
-### Core Methods
+## Client (Qt)
 
 ```python
-class VexAgent:
-    def __init__(self, project_path: str = None, model: str = "gemini"):
-        ...
+from vex_desktop.agent.qt import AgentClient
 
-    def process_command(self, command: str) -> CommandResult:
-        """Execute natural language command and return result."""
+client = AgentClient()
+client.progress.connect(on_progress)       # ProgressEvent
+client.result_ready.connect(on_result)     # AgentResult
+client.failed.connect(on_failed)           # str
+client.busy_changed.connect(on_busy)       # bool
 
-    def load_project(self, video_path: str) -> ProjectState:
-        """Create or load a Vex project."""
-
-    def get_timeline(self) -> dict:
-        """Return current timeline/state as JSON-serializable dict."""
-
-    def undo(self) -> bool:
-        """Undo last operation."""
-
-    async def process_command_async(self, command: str):
-        """For streaming progress in UI."""
+client.load_project(path)
+client.process_command("Trim the first 10 seconds")
+client.process_command("export for youtube")
+client.export("youtube_1080p")
+client.undo()
+client.redo()
+client.set_config("gemini", "gemma-4-31b-it")
+client.cancel()
+client.shutdown()
 ```
 
-## Events & Callbacks
+Every method returns immediately. Work runs on a `QThread` inside `AgentService`.
 
-- Progress callbacks for long-running operations (FFmpeg renders, LLM calls)
-- State change listeners for live UI updates
+## Service (no Qt)
 
-## Error Handling
+`AgentService.handle(op, payload, progress) -> AgentResult`
 
-Standardized exceptions with user-friendly messages.
+Ops are listed in `vex_desktop.protocol.OPS`. Types are JSON-serializable so the same service can run over stdio:
 
-See `src/vex_agent.py` for implementation details (to be created).
+```bash
+python -m vex_desktop.agent
+```
+
+Each stdin line is `{"op": "process_command", "payload": {"command": "..."}}`.
+Stdout lines are `{"type": "progress"|"result"|"error", ...}`.
+
+## Backends
+
+`create_backend()` reads `VEX_AGENT_BACKEND` (`auto` | `stub` | `core`, default `auto`). Auto uses the local Vex tree when `agent.py` is present, otherwise stub (see Architecture).
+
+## Errors
+
+`AgentError`, `ProjectError`, `FFmpegError`, `CoreUnavailable` — messages are safe to show in the chat pane.

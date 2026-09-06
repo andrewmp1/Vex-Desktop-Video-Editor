@@ -1,15 +1,14 @@
-name: Build macOS App
+name: Build
 
 on:
   workflow_dispatch:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
-  build-macos:
-    runs-on: macos-14
-    
+  build-linux:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,39 +16,46 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flet flet-video keyring moviepy yt-dlp pillow opencv-python-headless
+          pip install -e ".[dev]"
 
-      - name: Prepare icon
-        run: |
-          mkdir -p assets
-          # Convert PNG to ICNS if needed
-          if [ -f "assets/icon.png" ]; then
-            echo "Icon found"
-          else
-            echo "Warning: No icon.png found. Using default."
-          fi
+      - name: Build with PyInstaller
+        run: pyinstaller vex.spec
 
-      - name: Build macOS app with Flet
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vex-linux
+          path: dist/Vex
+
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
         run: |
-          flet build macos \
-            --name "Vex" \
-            --product-name "Vex Desktop Video Editor" \
-            --copyright "© 2026 Drew Purdy" \
-            --bundle-id "com.drewpurdy.vex" \
-            --icon assets/icon.icns \
-            --verbose
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Build with PyInstaller
+        run: pyinstaller vex.spec
 
       - name: Create DMG installer
         run: |
           brew install create-dmg
           create-dmg \
             --volname "Vex" \
-            --volicon assets/icon.icns \
             --window-pos 200 120 \
             --window-size 800 400 \
             --icon-size 100 \
@@ -58,17 +64,9 @@ jobs:
             --app-drop-link 600 185 \
             --no-internet-enable \
             "Vex.dmg" \
-            "build/macos"/
+            "dist/Vex.app" || true
 
-      - name: Create PKG installer (optional)
-        run: |
-          pkgbuild --component "build/macos/Vex.app" \
-                   --install-location "/Applications" \
-                   --identifier "com.drewpurdy.vex" \
-                   --version "${GITHUB_REF#refs/tags/v}" \
-                   --root "/" \
-                   "Vex.pkg" || echo "PKG creation skipped"
-
+      # Optional Gatekeeper signing for GitHub downloads — not App Store.
       - name: Notarize and Staple (requires secrets)
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         env:
@@ -76,19 +74,17 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          echo "Notarizing..."
+          if [ ! -f Vex.dmg ]; then echo "No DMG to notarize"; exit 0; fi
           xcrun notarytool submit "Vex.dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
           xcrun stapler staple "Vex.dmg"
-          echo "Notarization complete."
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Vex-macOS-Installers
+          name: Vex-macOS
           path: |
             Vex.dmg
-            Vex.pkg
-            build/macos/Vex.app
+            dist/Vex.app
 
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -96,7 +92,6 @@ jobs:
         with:
           files: |
             Vex.dmg
-            Vex.pkg
           generate_release_notes: true
           draft: false
         env:

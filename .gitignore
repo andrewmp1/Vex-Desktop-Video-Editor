@@ -2,15 +2,31 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+.eggs/
 
 # Virtual env
 .venv/
 env/
+venv/
 
-# Flet / PyInstaller
+# PyInstaller
 build/
 dist/
-*.app
+*.spec.bak
 
 # macOS
 .DS_Store
+
+# Editors
+.idea/
+.vscode/
+
+# Pinned upstream Vex checkout (SHA lives in vex_core.pin)
+/vex_core/
+
+# Generated UI captures (recreated by pytest / scripts/capture_ui.py)
+tests/screenshots/*.png
+
+# Local search index
+.zvec-grep/

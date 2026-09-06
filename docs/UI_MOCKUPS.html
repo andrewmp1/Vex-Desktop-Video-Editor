@@ -16,8 +16,8 @@
 </head>
 <body>
     <h1>Vex Desktop Video Editor</h1>
-    <p><strong>UI Mockups & Flet Implementation Guide</strong></p>
-    <p>This HTML document showcases realistic UI layouts for the Vex Desktop app using Flet. All designs are fully achievable with Flet components.</p>
+    <p><strong>UI Mockups & PySide6 Implementation Guide</strong></p>
+    <p>This HTML document showcases realistic UI layouts for the Vex Desktop app. The implementation is PySide6 (Qt 6) on Linux and macOS.</p>
 
     <div class="section">
         <h2>1. Main Split-Pane Layout (Recommended)</h2>
@@ -49,25 +49,25 @@
     </div>
 
     <div class="section">
-        <h2>3. Flet-Specific Examples</h2>
+        <h2>3. Dark editor chrome</h2>
         <div class="layout-grid">
             <div>
-                <img src="https://picsum.photos/id/180/800/500" alt="Flet Dashboard">
-                <p class="caption">Modern Flet dark theme dashboard (adaptable to video app)</p>
+                <img src="https://picsum.photos/id/180/800/500" alt="Dark dashboard">
+                <p class="caption">Dark Fusion theme (same look on Linux and macOS)</p>
             </div>
         </div>
     </div>
 
     <div class="flet-note">
-        <h3>How to Implement in Flet</h3>
+        <h3>How to implement in PySide6</h3>
         <ul>
-            <li>Use <code>ft.Row(expand=True)</code> with three Containers for split layout</li>
-            <li><code>flet_video.Video</code> for preview</li>
-            <li><code>ft.ListView</code> + <code>ft.TextField</code> for chat</li>
-            <li>Dark theme: <code>page.theme_mode = ft.ThemeMode.DARK</code></li>
+            <li><code>QSplitter</code> with three panes: preview, chat, timeline</li>
+            <li><code>QMediaPlayer</code> + <code>QVideoWidget</code> for preview</li>
+            <li>Chat list + <code>QLineEdit</code> for natural-language commands</li>
+            <li>Dark Fusion style + <code>theme.qss</code></li>
         </ul>
     </div>
 
-    <p><a href="../main.py">View the live Flet code skeleton →</a></p>
+    <p><a href="../main.py">View the PySide6 launcher →</a></p>
 </body>
 </html>

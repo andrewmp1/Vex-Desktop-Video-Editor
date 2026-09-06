@@ -1,23 +1,25 @@
 # Vex Desktop Video Editor
 
-## Project Overview
+Canonical overview: [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
 
-**Vex Desktop Video Editor** is a native-feeling macOS (and cross-platform) desktop application that wraps the powerful open-source Vex AI video editing agent.
+**Vex Desktop Video Editor** is a Linux and macOS PySide6 app around the open-source Vex AI video editing agent. It turns the Vex CLI into a GUI where users edit with natural language.
 
-It transforms Vex from a command-line REPL into an intuitive graphical video editor where users can edit videos using natural language commands (e.g., "Remove the first 10 seconds, add subtitles, and insert B-roll footage").
+### Core goals
 
-### Core Goals
-- Make advanced AI-driven video editing accessible to non-technical users
-- Leverage the full capabilities of the existing Vex project
-- Deliver a polished, responsive desktop experience using Flet
-- Support local and cloud LLM backends
-- Maintain full undo/redo, timeline, and project state management
+- Make AI-driven editing usable for non-technical users
+- Keep the full Vex agent, not a reduced command set
+- Stay responsive while FFmpeg and LLMs run
+- Support cloud and local LLM backends
+- Undo/redo, timeline, and project state
 
-### Tech Stack
-- **Frontend**: Flet (Python + Flutter)
+### Tech stack
+
+- **Frontend**: PySide6 (Qt 6)
 - **Backend**: Vex agent (Python)
-- **Video Processing**: FFmpeg + MoviePy
-- **LLM Integration**: Gemini, Claude, or local models
-- **Packaging**: Flet build / py2app for macOS .app bundle
+- **Preview**: Qt Multimedia
+- **Edits**: FFmpeg + MoviePy
+- **Packaging**: PyInstaller (Linux AppImage + macOS DMG via GitHub Releases)
 
-**Status**: Early development - Repository initialization phase.
+**Status**: Early development — PySide6 shell in place, agent still stubbed.
+
+Windows is not a target.
