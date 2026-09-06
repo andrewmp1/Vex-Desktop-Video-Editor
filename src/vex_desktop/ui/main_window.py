@@ -97,6 +97,9 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self._action("Undo", self._agent.undo, QKeySequence.StandardKey.Undo))
         edit_menu.addAction(self._action("Redo", self._agent.redo, QKeySequence.StandardKey.Redo))
         edit_menu.addAction(self._action("Cancel", self._agent.cancel, QKeySequence.StandardKey.Cancel))
+        edit_menu.addSeparator()
+        self._edit_acts = self._edit_command_actions()
+        edit_menu.addActions(self._edit_acts)
 
         help_menu = self.menuBar().addMenu("&Help")
         help_menu.addAction(self._action("About", self._about))
@@ -120,6 +123,15 @@ class MainWindow(QMainWindow):
         export_button.setMenu(self._make_export_menu("Export"))
         bar.addWidget(export_button)
         bar.addSeparator()
+        edit_button = QToolButton()
+        edit_button.setText("Edit")
+        edit_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        edit_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        edit_menu = QMenu("Edit", self)
+        edit_menu.addActions(self._edit_acts)
+        edit_button.setMenu(edit_menu)
+        bar.addWidget(edit_button)
+        bar.addSeparator()
         bar.addAction(self._action("Settings", self._open_settings))
         bar.addAction(self._action("Skills", self._open_skills))
         self.addToolBar(bar)
@@ -134,6 +146,37 @@ class MainWindow(QMainWindow):
             if remember:
                 self._export_actions.append(action)
         return menu
+
+    def _edit_command_actions(self) -> list[QAction]:
+        return [
+            self._action("Add subtitles", self._add_subtitles),
+            self._action("Insert B-roll…", self._insert_broll),
+            self._action("Add a simple effect", self._add_simple_effect),
+        ]
+
+    def _send_edit_command(self, command: str) -> None:
+        self._chat.append_user(command)
+        self._agent.process_command(command)
+
+    @Slot()
+    def _add_subtitles(self) -> None:
+        self._send_edit_command("Add subtitles")
+
+    @Slot()
+    def _add_simple_effect(self) -> None:
+        self._send_edit_command("Add a subtle zoom effect")
+
+    @Slot()
+    def _insert_broll(self) -> None:
+        filters = " ".join(f"*{s}" for s in sorted(VIDEO_SUFFIXES))
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Insert B-roll",
+            "",
+            f"Video files ({filters})",
+        )
+        if path:
+            self._send_edit_command(f"Insert B-roll from {path}")
 
     def _action(self, text: str, slot, shortcut=None) -> QAction:
         action = QAction(text, self)
