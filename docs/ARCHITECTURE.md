@@ -40,12 +40,12 @@ The product is the **agent protocol**, not the window. The PySide6 app is one cl
 
 - `vex_desktop.ui` may import `vex_desktop.agent.qt.AgentClient` and `vex_desktop.protocol` only.
 - UI code must not import `vex_core`, `StubBackend`, `VexCoreBackend`, or `AgentService`.
-- All agent ops (`load_project`, `process_command`, `undo`, `redo`, `set_config`, `export`, skills ops) run on a worker `QThread`.
+- All agent ops (`load_project`, `process_command`, `undo`, `redo`, `set_config`, `export`, skills ops, `pack_project`, `unpack_project`) run on a worker `QThread`.
 - Preview plays `snapshot.working_file` or `exported_path`. Agent edits still go through FFmpeg/Vex off the UI thread. The TIMELINE filmstrip may run `platform_support.ffmpeg_path()` on a worker thread to grab stills; it must not import `vex_core` or `tools.*`.
 
 ## Protocol
 
-Frozen JSON types in `vex_desktop/protocol.py` (`PROTOCOL_VERSION = 2`):
+Frozen JSON types in `vex_desktop/protocol.py` (`PROTOCOL_VERSION = 3`):
 
 | Op | Payload | Result |
 |----|---------|--------|
@@ -59,6 +59,8 @@ Frozen JSON types in `vex_desktop/protocol.py` (`PROTOCOL_VERSION = 2`):
 | `import_skill` | `{path}` | `skills` catalog + snapshot |
 | `remove_skill` | `{id}` | `skills` catalog + snapshot |
 | `set_skills` | `{ids}` | `skills` catalog + snapshot |
+| `pack_project` | `{output_path}` | `.vex` zip path in `exported_path` |
+| `unpack_project` | `{path}` | extract then load; snapshot + working file |
 | `cancel` | `{}` | flag only |
 
 Progress events (`stage`, `message`, `tool`, `fraction`) stream while an op runs.
@@ -70,6 +72,10 @@ The same envelopes are used by `python -m vex_desktop.agent` (JSONL on stdin/std
 `vex_desktop.skills` is Qt-free: `SkillStore` (scan/import/remove under `data_dir()/skills`), `SkillState` (`data_dir()/skills.json` enabled set + seed flag), and `compose_preamble`.
 
 Composition lives in `AgentService.handle("process_command")`: enabled skill bodies are prepended before dispatch to any backend. Injection is confined to `process_command`; export, undo, redo, and load do not see the preamble. The Skills dialog talks only to `AgentClient`.
+
+## Project bundles
+
+`vex_desktop.bundle` is Qt-free zip pack/unpack. `AgentService` handles `pack_project` / `unpack_project`. Core packs the Vex project folder under `~/.video-agent/projects/<id>/`; stub packs the working file. Unpack extracts into that projects dir, then `load_project`.
 
 ## Backends
 

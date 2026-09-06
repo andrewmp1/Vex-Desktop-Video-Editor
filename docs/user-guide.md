@@ -66,6 +66,8 @@ The window has **PREVIEW**, **CHAT**, and **TIMELINE**. Use the toolbar or **Fil
 | **Open Video** | Local file (mp4 and other common video types). Drag-and-drop onto the preview also works. |
 | **YouTube** | Paste a `https://www.youtube.com/watch?v=…` URL. Core downloads it into a Vex project; stub cannot fetch YouTube. |
 | **Open Project** | Pick an existing Vex project from `~/.video-agent/projects`. |
+| **Open Project File…** | Open a `.vex` zip (saved from **Save Project…**). |
+| **Save Project…** | Write a `.vex` zip of the current project (core: Vex project folder; stub: working file). |
 
 You can also paste a YouTube URL into chat on core.
 
@@ -78,6 +80,12 @@ Type a plain-language instruction and press Enter or **Send**. Examples:
 - `Trim the first 10 seconds`
 - `Add subtitles`
 - `Undo` / **Edit → Undo** (also **Edit → Redo**, **Edit → Cancel**)
+
+**Edit** (menu and toolbar) also sends the same chat commands without typing:
+
+- **Add subtitles** → `Add subtitles`
+- **Insert B-roll…** → pick a clip, then `Insert B-roll from <path>`
+- **Add a simple effect** → `Add a subtle zoom effect`
 
 The timeline pane shows a filmstrip of frames from the current working file. Click a frame to seek the preview. Edit history under the filmstrip still comes from the agent snapshot (undo/redo). Preview plays the working file after a successful edit. It is not the edit engine; FFmpeg/Vex write files off the UI thread.
 
@@ -119,6 +127,7 @@ If you export with no clip loaded, chat shows **Load a video**.
 | Enabled skills | `…/Vex/skills.json` |
 | Stub default export | `…/Vex/exports/<name>_<preset>.mp4` (podcast: `.mp3`) |
 | Core export | Path printed in chat (usually inside the project directory) |
+| `.vex` project zip | Wherever you save it; unpack extracts into the Vex projects dir |
 
 Override the Vex project root with `AGENT_PROJECTS_DIR` if you need an isolated tree.
 

@@ -17,7 +17,7 @@ pip install -e ".[dev]"
 VEX_AGENT_BACKEND=stub vex-desktop
 ```
 
-Equivalent: `python -m vex_desktop`. Toolbar: **Open Video**, **YouTube**, **Project**, **Export** (preset menu), **Skills**. File → Export lists YouTube, Instagram, TikTok, X, and podcast audio. Chat `export for youtube` uses the same agent op.
+Equivalent: `python -m vex_desktop`. Toolbar: **Open Video**, **YouTube**, **Project**, **Export**, **Edit** (subtitles / B-roll / effect), **Skills**. File → Save/Open Project File uses a `.vex` zip. File → Export lists YouTube, Instagram, TikTok, X, and podcast audio. Chat `export for youtube` uses the same agent op.
 
 ## Skills
 

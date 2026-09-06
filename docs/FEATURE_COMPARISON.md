@@ -11,7 +11,8 @@ Updated 2026-09-06. Canonical remaining work: [project-plan.md](project-plan.md)
 | Open file / YouTube / existing project | Yes | Yes |
 | Export YouTube 1080p | Yes (`export` op + chat + File → Export) | Yes |
 | Other export presets | File → Export / toolbar menu (Instagram, TikTok, X, podcast audio) | Yes |
-| Auto shorts / B-roll / visuals | Via chat to core only; no dedicated UI | Yes |
+| Auto shorts / B-roll / visuals | Edit menu: subtitles, B-roll file picker, simple effect (chat `process_command`) | Yes |
+| `.vex` project bundle | File → Save/Open Project File (zip of project folder or working file) | Folder JSON |
 | Skills (local markdown instructions) | Yes (dialog + protocol ops; inject on chat only) | No dedicated skill store |
 | Packaging | AppImage + DMG; tag `v*` GitHub Release with checksums | N/A |
 | Tests | pytest-qt + stub/core export | Large CLI suite |
