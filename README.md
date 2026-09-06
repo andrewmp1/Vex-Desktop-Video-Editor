@@ -45,8 +45,12 @@ VEX_CORE_PATH=~/claude_work/vex VEX_AGENT_BACKEND=core vex-desktop
 PyInstaller cannot cross-compile. Build on each OS, then attach the files to a GitHub Release. No Mac App Store.
 
 ```bash
+# Linux AppImage (also writes dist/Vex/)
+bash scripts/build_appimage.sh
+
+# macOS (on a Mac)
 pyinstaller vex.spec
 ```
 
-- Linux: `dist/Vex/` (wrap as AppImage for download)
+- Linux: `dist/Vex-x86_64.AppImage` (relocatable `dist/Vex/` is kept as a backup)
 - macOS: `dist/Vex.app` (wrap as a DMG for download)

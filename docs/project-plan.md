@@ -102,7 +102,8 @@ VEX_CORE_PATH=~/claude_work/vex \
 - Export preset menu (Instagram, TikTok, X, podcast audio)
 - Failed export and QA copy surface in chat (empty Export → “Load a video”)
 - Stub pytest workflow on pull requests (`.github/workflows/test.yml`)
-- PyInstaller spec collects `ffmpeg` next to the executable (`ffmpeg_path()` prefers that sibling)
+- PyInstaller spec collects `ffmpeg`; `ffmpeg_path()` checks the executable dir and `_internal/`
+- Linux AppImage (`scripts/build_appimage.sh`; local `dist/Vex-x86_64.AppImage` smoke-launches)
 - Automated tests: UI smoke + screenshots, stub export, core+ffmpeg export (skip in desktop venv)
 - Layout fixes verified via `tests/screenshots/`
 - App icon (`assets/icon.png`, window + PyInstaller)
@@ -110,7 +111,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 ### Not done
 
-- AppImage / DMG / bundled FFmpeg
+- macOS DMG on CI / GitHub Release assets
 - End-user documentation
 - Visual timeline (thumbnails), `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
 
@@ -140,7 +141,7 @@ Preview: QMediaPlayer on working_file / exported_path
 
 ## 6. Remaining work (ordered)
 
-P0–P4 are done (P3 GitHub run waits on a PR). Complete the rest in order. Each item is one PR unless noted.
+P0–P5 are in tree (P3 GitHub run and P5 CI artifact wait on a remote build). Complete the rest in order.
 
 ### P0 — Hygiene — **done**
 
@@ -197,7 +198,7 @@ P0–P4 are done (P3 GitHub run waits on a PR). Complete the rest in order. Each
 | **Verify** | Frozen dir runs `ffmpeg_path()` pointing inside the bundle (unit test with a fake sibling binary, plus a manual run of `dist/Vex` on Linux). |
 | **Done when** | Spec collects ffmpeg; `ffmpeg_path()` finds it without `PATH`. |
 
-### P5 — Linux AppImage
+### P5 — Linux AppImage — **done** (local `dist/Vex-x86_64.AppImage` smoke-launched; CI artifact waits on a tag)
 
 **Goal:** One downloadable Linux file.
 

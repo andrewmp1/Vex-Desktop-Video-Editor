@@ -4,6 +4,13 @@ import sys
 from pathlib import Path
 
 
+def _clear_ffmpeg_env(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.delenv("FFMPEG_BINARY", raising=False)
+    monkeypatch.delenv("IMAGEIO_FFMPEG_EXE", raising=False)
+    monkeypatch.delenv("FFMPEG_PATH", raising=False)
+    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+
+
 def test_ffmpeg_path_prefers_sibling_of_executable(tmp_path, monkeypatch):
     from vex_desktop.platform_support import ffmpeg_path
 
@@ -14,10 +21,23 @@ def test_ffmpeg_path_prefers_sibling_of_executable(tmp_path, monkeypatch):
     bundled.chmod(0o755)
 
     monkeypatch.setattr(sys, "executable", str(fake_app))
-    monkeypatch.delenv("FFMPEG_BINARY", raising=False)
-    monkeypatch.delenv("IMAGEIO_FFMPEG_EXE", raising=False)
-    monkeypatch.delenv("FFMPEG_PATH", raising=False)
-    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+    _clear_ffmpeg_env(monkeypatch, tmp_path)
+
+    assert ffmpeg_path() == str(bundled)
+
+
+def test_ffmpeg_path_finds_pyinstaller_internal(tmp_path, monkeypatch):
+    from vex_desktop.platform_support import ffmpeg_path
+
+    fake_app = tmp_path / "Vex"
+    fake_app.write_bytes(b"")
+    bundled = tmp_path / "_internal" / "ffmpeg"
+    bundled.parent.mkdir()
+    bundled.write_bytes(b"")
+    bundled.chmod(0o755)
+
+    monkeypatch.setattr(sys, "executable", str(fake_app))
+    _clear_ffmpeg_env(monkeypatch, tmp_path)
 
     assert ffmpeg_path() == str(bundled)
 

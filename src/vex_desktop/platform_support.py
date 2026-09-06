@@ -58,9 +58,17 @@ def ffmpeg_path() -> str | None:
         value = os.environ.get(key)
         if value:
             return value
-    bundled = Path(sys.executable).resolve().parent / "ffmpeg"
-    if bundled.is_file():
-        return str(bundled)
+    exe_dir = Path(sys.executable).resolve().parent
+    candidates = [
+        exe_dir / "ffmpeg",
+        exe_dir / "_internal" / "ffmpeg",
+    ]
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidates.append(Path(meipass) / "ffmpeg")
+    for bundled in candidates:
+        if bundled.is_file():
+            return str(bundled)
     return shutil.which("ffmpeg")
 
 
