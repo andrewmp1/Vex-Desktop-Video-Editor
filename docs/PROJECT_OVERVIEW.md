@@ -2,28 +2,31 @@
 
 ## Project Overview
 
-**Vex Desktop Video Editor** is a desktop application that brings the power of the [Vex](https://github.com/AKMessi/vex) AI video editing agent into an intuitive, modern graphical user interface.
+**Vex Desktop Video Editor** is a Linux and macOS application that wraps the [Vex](https://github.com/AKMessi/vex) AI video editing agent in a PySide6 GUI.
 
 ### What is Vex?
-Vex is an open-source Python-based AI agent that allows users to edit videos using natural language commands (e.g., "Trim the first 10 seconds", "Add subtitles", "Insert B-roll footage").
 
-### Goal of this Project
-Transform the CLI-based Vex agent into a full-featured desktop video editor app using **Flet** for the UI, making advanced AI-powered video editing accessible and user-friendly on macOS (and other platforms).
+Vex is an open-source Python agent that edits video from natural language (e.g. "Trim the first 10 seconds", "Add subtitles", "Insert B-roll").
 
-### Key Features Planned
+### Goal
+
+Turn the Vex CLI into a desktop editor: import a file, describe the edit, preview the result, export. Linux is the MVP platform; macOS uses the same code and a separate build.
+
+### Key features planned
+
 - Drag-and-drop video import
-- Real-time video preview
-- Natural language chat interface for edits
-- Visual timeline and undo/redo stack
-- One-click exports for social media
-- Integration with Vex’s full agent capabilities (LLM-powered editing, Whisper transcription, FFmpeg rendering, etc.)
+- Real-time video preview (Qt Multimedia)
+- Natural language chat for edits
+- Visual timeline and undo/redo
+- One-click social export
+- Full Vex agent capabilities (LLM, Whisper, FFmpeg)
 
-### Tech Stack
-- **Backend**: Vex agent (forked/integrated)
-- **Frontend**: Flet (Python + Flutter)
-- **Video**: flet-video + FFmpeg
-- **Packaging**: Flet build tools for macOS .app
+### Tech stack
 
----
+- **UI**: PySide6 (Qt 6)
+- **Backend**: Vex agent (Python)
+- **Preview**: Qt Multimedia (FFmpeg backend)
+- **Edits**: FFmpeg + MoviePy
+- **Packaging**: PyInstaller — Linux AppImage, macOS DMG, published as GitHub Releases (no App Store)
 
-This repository contains the source code for the desktop application.
+Windows is not a target.

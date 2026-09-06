@@ -1,0 +1,133 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Build AppImage
+        run: bash scripts/build_appimage.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vex-linux
+          path: |
+            dist/Vex-x86_64.AppImage
+            dist/Vex
+
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          brew install ffmpeg create-dmg
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Build DMG
+        run: bash scripts/build_dmg.sh
+
+      # Optional Gatekeeper signing for GitHub downloads — not App Store.
+      - name: Notarize and Staple
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$APPLE_ID" ] || [ -z "$APPLE_PASSWORD" ] || [ -z "$APPLE_TEAM_ID" ]; then
+            echo "Skipping notarization (APPLE_* secrets not set)"
+            exit 0
+          fi
+          if [ ! -f dist/Vex.dmg ]; then
+            echo "dist/Vex.dmg is missing"
+            exit 1
+          fi
+          xcrun notarytool submit "dist/Vex.dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "dist/Vex.dmg"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vex-macOS
+          path: |
+            dist/Vex.dmg
+            dist/Vex.app
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Vex-linux
+          path: artifacts/linux
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Vex-macOS
+          path: artifacts/macos
+
+      - name: Stage release files
+        run: |
+          set -euo pipefail
+          mkdir -p dist-release
+          appimage="$(find artifacts/linux -name 'Vex-*.AppImage' -type f | head -n 1)"
+          dmg="$(find artifacts/macos -name 'Vex.dmg' -type f | head -n 1)"
+          if [ -z "$appimage" ] || [ -z "$dmg" ]; then
+            echo "Missing AppImage or DMG"
+            find artifacts -type f
+            exit 1
+          fi
+          cp "$appimage" dist-release/Vex-x86_64.AppImage
+          cp "$dmg" dist-release/Vex.dmg
+          cd dist-release
+          sha256sum Vex-x86_64.AppImage Vex.dmg > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist-release/Vex-x86_64.AppImage
+            dist-release/Vex.dmg
+            dist-release/SHA256SUMS
+          generate_release_notes: true
+          draft: false
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Vex
+Comment=Desktop editor wrapping the Vex AI video agent
+Exec=Vex
+Icon=vex
+Terminal=false
+Categories=AudioVideo;Video;
+StartupWMClass=Vex

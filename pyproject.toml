@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vex-desktop"
+version = "0.1.0"
+description = "Linux and macOS desktop editor wrapping the Vex AI video agent"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.7",
+    "platformdirs",
+    "keyring",
+]
+
+[project.optional-dependencies]
+dev = ["pyinstaller", "pytest>=8.0", "pytest-qt>=4.4"]
+
+[tool.pytest.ini_options]
+qt_api = "pyside6"
+testpaths = ["tests"]
+
+[project.scripts]
+vex-desktop = "vex_desktop.app:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vex_desktop = ["ui/*.qss", "ui/*.png"]

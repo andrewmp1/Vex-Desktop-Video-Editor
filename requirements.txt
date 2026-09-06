@@ -1,12 +1,3 @@
-flet
-flet-video
+PySide6>=6.7
+platformdirs
 keyring
-moviepy
-ffmpeg-python
-openai
-anthropic
-google-generativeai
-yt-dlp
-pillow
-opencv-python-headless
-pexels-api
