@@ -68,6 +68,31 @@ def test_macos_ci_writes_dist_dmg():
     assert "|| true" not in workflow
 
 
+def test_readme_links_user_guide():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "docs/user-guide.md" in readme
+
+
+def test_user_guide_covers_required_walkthrough():
+    text = (ROOT / "docs" / "user-guide.md").read_text(encoding="utf-8")
+    required = (
+        "AppImage",
+        "DMG",
+        "Gemini",
+        "Settings",
+        "Open Video",
+        "YouTube",
+        "Open Project",
+        "Trim the first 10 seconds",
+        "export for youtube",
+        "~/.video-agent/projects",
+        "AV1",
+        "same project",
+    )
+    missing = [item for item in required if item not in text]
+    assert missing == []
+
+
 def test_tag_release_attaches_appimage_dmg_and_checksums():
     workflow = (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8")
     assert "needs: [build-linux, build-macos]" in workflow

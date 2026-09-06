@@ -2,7 +2,7 @@
 
 **Status:** MVP loop works on Linux (load → natural-language edit → preview → YouTube export). Remaining work is packaging, remaining presets, and docs.
 
-**Last updated:** 2026-09-05
+**Last updated:** 2026-09-06
 
 This document is the implementation guide. Architecture details live in [ARCHITECTURE.md](ARCHITECTURE.md). Stack choices live in [TECH_DECISIONS.md](TECH_DECISIONS.md). The agent API lives in [API_WRAPPER_SPEC.md](API_WRAPPER_SPEC.md).
 
@@ -106,6 +106,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 - Linux AppImage (`scripts/build_appimage.sh`; local `dist/Vex-x86_64.AppImage` smoke-launches)
 - macOS DMG script + CI (`scripts/build_dmg.sh` → `dist/Vex.dmg`; notarize skipped without secrets)
 - GitHub Release on `v*` tags attaches AppImage, DMG, and `SHA256SUMS`
+- User guide (`docs/user-guide.md`, linked from README)
 - Automated tests: UI smoke + screenshots, stub export, core+ffmpeg export (skip in desktop venv)
 - Layout fixes verified via `tests/screenshots/`
 - App icon (`assets/icon.png`, window + PyInstaller)
@@ -113,7 +114,6 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 ### Not done
 
-- End-user documentation
 - Visual timeline (thumbnails), `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
 
 ### Known limits (not bugs to “fix” unless specified)
@@ -142,7 +142,7 @@ Preview: QMediaPlayer on working_file / exported_path
 
 ## 6. Remaining work (ordered)
 
-P0–P7 are in tree (CI/tag verify waits on a remote build). Complete the rest in order.
+P0–P8 are in tree (CI/tag verify waits on a remote build). Later items in section 7 are optional.
 
 ### P0 — Hygiene — **done**
 
@@ -235,7 +235,7 @@ P0–P7 are in tree (CI/tag verify waits on a remote build). Complete the rest i
 | **Verify** | GitHub Release page for the tag lists both files. |
 | **Done when** | A real `v*` tag has downloadable Linux and macOS builds. |
 
-### P8 — User documentation
+### P8 — User documentation — **done**
 
 **Goal:** A stranger can install, set an API key, edit, export.
 

@@ -1,6 +1,6 @@
 # Feature Comparison - Vex Desktop Video Editor
 
-Updated 2026-09-05. Canonical remaining work: [project-plan.md](project-plan.md).
+Updated 2026-09-06. Canonical remaining work: [project-plan.md](project-plan.md). User guide: [user-guide.md](user-guide.md).
 
 | Area | Desktop app | Vex CLI |
 |------|-------------|---------|

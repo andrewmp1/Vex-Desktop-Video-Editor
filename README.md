@@ -4,7 +4,7 @@ Linux and macOS desktop app wrapping the Vex AI video editing agent. The UI is *
 
 The window is a client of a Qt-free `AgentService`. Edits can run on a **stub** backend (UI work) or on a local Vex checkout (**core**).
 
-Followable roadmap: [docs/project-plan.md](docs/project-plan.md).
+User guide: [docs/user-guide.md](docs/user-guide.md). Followable roadmap: [docs/project-plan.md](docs/project-plan.md).
 
 ## Install and run
 
