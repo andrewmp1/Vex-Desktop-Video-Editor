@@ -7,6 +7,7 @@ graph TD
     UI[PySide6 UI] --> Client[AgentClient Qt]
     Client -->|queued signals| Service[AgentService]
     Stdio[JSONL stdio host] --> Service
+    Service --> Skills[SkillStore / SkillState]
     Service --> Backend{AgentBackend}
     Backend --> Stub[StubBackend]
     Backend --> Core[VexCoreBackend]
@@ -26,6 +27,7 @@ graph TD
 
     subgraph Agent boundary no Qt
         Service
+        Skills
         Backend
         Stub
         Core
@@ -38,12 +40,12 @@ The product is the **agent protocol**, not the window. The PySide6 app is one cl
 
 - `vex_desktop.ui` may import `vex_desktop.agent.qt.AgentClient` and `vex_desktop.protocol` only.
 - UI code must not import `vex_core`, `StubBackend`, `VexCoreBackend`, or `AgentService`.
-- All agent ops (`load_project`, `process_command`, `undo`, `redo`, `set_config`, `export`) run on a worker `QThread`.
+- All agent ops (`load_project`, `process_command`, `undo`, `redo`, `set_config`, `export`, skills ops) run on a worker `QThread`.
 - Preview plays `snapshot.working_file` or `exported_path`. Agent edits still go through FFmpeg/Vex off the UI thread. The TIMELINE filmstrip may run `platform_support.ffmpeg_path()` on a worker thread to grab stills; it must not import `vex_core` or `tools.*`.
 
 ## Protocol
 
-Frozen JSON types in `vex_desktop/protocol.py` (`PROTOCOL_VERSION = 1`):
+Frozen JSON types in `vex_desktop/protocol.py` (`PROTOCOL_VERSION = 2`):
 
 | Op | Payload | Result |
 |----|---------|--------|
@@ -53,11 +55,21 @@ Frozen JSON types in `vex_desktop/protocol.py` (`PROTOCOL_VERSION = 1`):
 | `snapshot` | `{}` | snapshot |
 | `set_config` | `{provider, model}` | snapshot |
 | `export` | `{preset, output_path?}` | `exported_path` + snapshot |
+| `list_skills` | `{}` | `skills` catalog + snapshot |
+| `import_skill` | `{path}` | `skills` catalog + snapshot |
+| `remove_skill` | `{id}` | `skills` catalog + snapshot |
+| `set_skills` | `{ids}` | `skills` catalog + snapshot |
 | `cancel` | `{}` | flag only |
 
 Progress events (`stage`, `message`, `tool`, `fraction`) stream while an op runs.
 
 The same envelopes are used by `python -m vex_desktop.agent` (JSONL on stdin/stdout) so the service can later move to a subprocess without changing the UI.
+
+## Skills
+
+`vex_desktop.skills` is Qt-free: `SkillStore` (scan/import/remove under `data_dir()/skills`), `SkillState` (`data_dir()/skills.json` enabled set + seed flag), and `compose_preamble`.
+
+Composition lives in `AgentService.handle("process_command")`: enabled skill bodies are prepended before dispatch to any backend. Injection is confined to `process_command`; export, undo, redo, and load do not see the preamble. The Skills dialog talks only to `AgentClient`.
 
 ## Backends
 

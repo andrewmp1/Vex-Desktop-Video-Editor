@@ -17,7 +17,11 @@ pip install -e ".[dev]"
 VEX_AGENT_BACKEND=stub vex-desktop
 ```
 
-Equivalent: `python -m vex_desktop`. Toolbar: **Open Video**, **YouTube**, **Project**, **Export** (preset menu). File → Export lists YouTube, Instagram, TikTok, X, and podcast audio. Chat `export for youtube` uses the same agent op.
+Equivalent: `python -m vex_desktop`. Toolbar: **Open Video**, **YouTube**, **Project**, **Export** (preset menu), **Skills**. File → Export lists YouTube, Instagram, TikTok, X, and podcast audio. Chat `export for youtube` uses the same agent op.
+
+## Skills
+
+Markdown instruction files the agent follows during chat edits (`process_command` only). Add local `.md` / `SKILL.md` folders via the toolbar **Skills** button or **File → Skills…**. Preview a skill before enabling it. Enabled ids persist in the app data dir (`skills.json`); skill files live under `data_dir()/skills` (Linux: typically `~/.local/share/Vex/skills`). Bundled examples `youtube-metadata` and `tiktok-format` are seeded once. Local files only — no marketplace or URL import.
 
 ## Tests and screenshots
 

@@ -2,6 +2,8 @@
 
 The GUI talks only to `AgentClient`. It never constructs a Vex class and never imports `vex_core`.
 
+`PROTOCOL_VERSION = 2` (additive: skills ops and `AgentResult.skills`).
+
 ## Client (Qt)
 
 ```python
@@ -20,6 +22,10 @@ client.export("youtube_1080p")
 client.undo()
 client.redo()
 client.set_config("gemini", "gemma-4-31b-it")
+client.list_skills()
+client.import_skill("/path/to/SKILL.md")
+client.set_skills(["youtube-metadata"])
+client.remove_skill("youtube-metadata")
 client.cancel()
 client.shutdown()
 ```
@@ -38,6 +44,23 @@ python -m vex_desktop.agent
 
 Each stdin line is `{"op": "process_command", "payload": {"command": "..."}}`.
 Stdout lines are `{"type": "progress"|"result"|"error", ...}`.
+
+### Skills ops
+
+Handled by `AgentService` (local disk only; no backend LLM call). Catalog rows are returned on `AgentResult.skills`.
+
+| Op | Payload | Behavior |
+|----|---------|----------|
+| `list_skills` | `{}` | Scan `data_dir()/skills`, return catalog |
+| `import_skill` | `{"path": "..."}` | Copy a local `.md` or skill folder into the store |
+| `remove_skill` | `{"id": "..."}` | Delete from disk and the enabled set |
+| `set_skills` | `{"ids": ["a", "b"]}` | Persist enabled ids to `data_dir()/skills.json` |
+
+Each catalog entry: `id`, `name`, `description`, `enabled`, `chars`, plus additive `body` (markdown after frontmatter, for UI preview).
+
+Skills inject only on `process_command` (composed preamble + user command). `export`, `undo`, `redo`, and `load_project` are unchanged. Local files only — no marketplace or URL fetch.
+
+On Linux, skills live under `$XDG_DATA_HOME/Vex/skills` (typically `~/.local/share/Vex/skills`).
 
 ## Backends
 

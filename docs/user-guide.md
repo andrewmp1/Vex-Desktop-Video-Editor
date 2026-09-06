@@ -81,6 +81,18 @@ Type a plain-language instruction and press Enter or **Send**. Examples:
 
 The timeline pane shows a filmstrip of frames from the current working file. Click a frame to seek the preview. Edit history under the filmstrip still comes from the agent snapshot (undo/redo). Preview plays the working file after a successful edit. It is not the edit engine; FFmpeg/Vex write files off the UI thread.
 
+## Skills
+
+Skills are markdown instruction files the AI agent follows while editing in chat. They do not add new tools; they shape how the agent uses existing ones. Export, undo, redo, and load are not affected.
+
+1. Open **File → Skills…** or the toolbar **Skills** button.
+2. Notice: *"Skills are instructions the AI agent will follow while editing. Only add files you trust."*
+3. **Add…** (or drag-and-drop) a local `.md` file or a folder that contains `SKILL.md`. There is no marketplace or URL fetch.
+4. Select a skill in the list to preview its body. The enable checkbox stays locked until you have previewed it in this session.
+5. Check **Enable**. Enabled skills apply on the next chat command.
+
+Bundled examples `youtube-metadata` and `tiktok-format` are copied into your data dir on first run (you can delete them). Skill files live under the app data `skills/` folder; the enabled set is stored in `skills.json` (see [Where files go](#where-files-go)).
+
 ## Export
 
 **File → Export** and the toolbar **Export** menu list:
@@ -102,7 +114,9 @@ If you export with no clip loaded, chat shows **Load a video**.
 | What | Location |
 |------|----------|
 | Vex CLI / core projects | `~/.video-agent/projects/` |
-| App data (stub exports, file-fallback secrets) | Linux: `~/.local/share/Vex/` · macOS: `~/Library/Application Support/Vex/` |
+| App data (stub exports, file-fallback secrets, skills) | Linux: `~/.local/share/Vex/` · macOS: `~/Library/Application Support/Vex/` |
+| Skills files | `…/Vex/skills/` (`SKILL.md` folders or bare `.md`) |
+| Enabled skills | `…/Vex/skills.json` |
 | Stub default export | `…/Vex/exports/<name>_<preset>.mp4` (podcast: `.mp3`) |
 | Core export | Path printed in chat (usually inside the project directory) |
 
@@ -130,9 +144,10 @@ Do not run GUI **core** and the CLI encoder on the same project at the same time
 1. Install the AppImage or DMG (or run from source).
 2. Settings → Gemini API key.
 3. **Open Video** (local mp4) or **YouTube** on core.
-4. Chat: `Trim the first 10 seconds`.
-5. Confirm preview/timeline updated.
-6. **Export → YouTube 1080p** or chat `export for youtube`.
-7. Copy the path from chat and open that file in a player.
+4. (Optional) **Skills** → preview and enable an example such as `youtube-metadata`.
+5. Chat: `Trim the first 10 seconds`.
+6. Confirm preview/timeline updated.
+7. **Export → YouTube 1080p** or chat `export for youtube`.
+8. Copy the path from chat and open that file in a player.
 
 Roadmap and packaging internals: [project-plan.md](project-plan.md).
