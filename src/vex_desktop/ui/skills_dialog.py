@@ -150,6 +150,7 @@ class SkillsDialog(QDialog):
         self._viewed: set[str] = set()
         self._checkboxes: dict[str, QCheckBox] = {}
         self._import_queue: list[str] = []
+        self._list_pending = True
         self._updating = False
         self._connected = False
 
@@ -216,8 +217,7 @@ class SkillsDialog(QDialog):
         self._client.failed.connect(self._on_failed)
         self._client.busy_changed.connect(self._on_busy)
         self._connected = True
-        if not self._client.busy:
-            self._client.list_skills()
+        self._request_catalog()
 
     def closeEvent(self, event) -> None:  # noqa: N802
         self._disconnect_client()
@@ -296,6 +296,13 @@ class SkillsDialog(QDialog):
     def _flush_queue(self) -> None:
         if self._import_queue and not self._client.busy:
             self._client.import_skill(self._import_queue.pop(0))
+
+    def _request_catalog(self) -> None:
+        if self._client.busy:
+            self._list_pending = True
+            return
+        self._list_pending = False
+        self._client.list_skills()
 
     def _current_skill(self) -> dict | None:
         row = self._list.currentRow()
@@ -384,6 +391,9 @@ class SkillsDialog(QDialog):
         self._add_btn.setEnabled(not busy)
         self._remove_btn.setEnabled(not busy and self._list.currentRow() >= 0)
         if not busy:
+            if self._list_pending:
+                self._request_catalog()
+                return
             self._flush_queue()
 
     def _disconnect_client(self) -> None:

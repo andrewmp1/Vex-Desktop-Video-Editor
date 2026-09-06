@@ -384,6 +384,26 @@ def test_skills_dialog_opens_from_toolbar(qtbot, tmp_path, monkeypatch):
     _shutdown_window(qtbot, win)
 
 
+def test_skills_dialog_loads_catalog_after_agent_idle(qtbot, tmp_path, monkeypatch):
+    from vex_desktop.ui.skills_dialog import SkillsDialog
+
+    win = _make_window(qtbot, tmp_path, monkeypatch)
+    win._agent._set_busy(True)
+    dialog = SkillsDialog(None, win._agent)
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.waitExposed(dialog)
+    assert win._agent.busy
+    assert dialog._list.count() == 0
+    win._agent._set_busy(False)
+    qtbot.waitUntil(lambda: not win._agent.busy, timeout=5000)
+    qtbot.waitUntil(lambda: dialog._list.count() >= 1, timeout=5000)
+    ids = set(_skill_ids(dialog))
+    assert "youtube-metadata" in ids
+    assert "tiktok-format" in ids
+    _shutdown_window(qtbot, win, dialog)
+
+
 def test_skills_checkbox_disabled_until_preview_selected(qtbot, tmp_path, monkeypatch):
     win = _make_window(qtbot, tmp_path, monkeypatch)
     dialog = _open_skills_dialog(qtbot, win)
