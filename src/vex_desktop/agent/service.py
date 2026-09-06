@@ -151,6 +151,8 @@ class AgentService:
         return self._skills_result("list_skills", message)
 
     def _import_skill(self, path: str) -> AgentResult:
+        if not path.strip():
+            raise AgentError("Skill file not found.")
         try:
             info = self._store.import_path(path)
         except FileNotFoundError:

@@ -152,6 +152,21 @@ def test_import_skill_missing_path_raises(tmp_path, monkeypatch):
     assert "not found" in message.lower()
 
 
+@pytest.mark.parametrize("payload", [{}, {"path": ""}, {"path": None}])
+def test_import_skill_blank_path_raises(tmp_path, monkeypatch, payload):
+    service = _service(tmp_path, monkeypatch)
+    with pytest.raises(AgentError) as exc:
+        service.handle("import_skill", payload)
+    message = str(exc.value)
+    assert "not found" in message.lower()
+    assert "skill.md" not in message.lower()
+    from vex_desktop.platform_support import data_dir
+
+    skills_dir = data_dir() / "skills"
+    if skills_dir.is_dir():
+        assert list(skills_dir.iterdir()) == []
+
+
 def test_import_skill_unreadable_type_raises(tmp_path, monkeypatch):
     service = _service(tmp_path, monkeypatch)
     bad = tmp_path / "notes.txt"
