@@ -1,12 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
+import shutil
 from pathlib import Path
 
 ROOT = Path(SPECPATH)
+_vendor_ffmpeg = ROOT / "vendor" / "ffmpeg"
+_ffmpeg = _vendor_ffmpeg if _vendor_ffmpeg.is_file() else shutil.which("ffmpeg")
+if not _ffmpeg:
+    raise SystemExit(
+        "ffmpeg not found. Install it on PATH or place a static binary at vendor/ffmpeg before pyinstaller vex.spec."
+    )
+BINARIES = [(str(_ffmpeg), ".")]
 
 a = Analysis(
     [str(ROOT / "main.py")],
     pathex=[str(ROOT / "src")],
-    binaries=[],
+    binaries=BINARIES,
     datas=[
         (str(ROOT / "src" / "vex_desktop" / "ui" / "theme.qss"), "vex_desktop/ui"),
         (str(ROOT / "src" / "vex_desktop" / "ui" / "icon.png"), "vex_desktop/ui"),

@@ -98,7 +98,11 @@ VEX_CORE_PATH=~/claude_work/vex \
 - Core backend talks to local Vex (`VideoAgent`, `create_project`, YouTube URL, `tools.export.execute`)
 - Secrets via `keyring` (file fallback); Settings dialog
 - Software AV1 preview (no VAAPI spam on Radeon R9 M370X)
-- YouTube `youtube_1080p` export (chat, toolbar, `export` op)
+- YouTube `youtube_1080p` export (chat, File → Export, `export` op)
+- Export preset menu (Instagram, TikTok, X, podcast audio)
+- Failed export and QA copy surface in chat (empty Export → “Load a video”)
+- Stub pytest workflow on pull requests (`.github/workflows/test.yml`)
+- PyInstaller spec collects `ffmpeg` next to the executable (`ffmpeg_path()` prefers that sibling)
 - Automated tests: UI smoke + screenshots, stub export, core+ffmpeg export (skip in desktop venv)
 - Layout fixes verified via `tests/screenshots/`
 - App icon (`assets/icon.png`, window + PyInstaller)
@@ -106,9 +110,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 ### Not done
 
-- Export preset picker (Instagram, TikTok, X, audio) in the UI — the **op** already accepts those names
 - AppImage / DMG / bundled FFmpeg
-- CI that runs pytest on pull requests
 - End-user documentation
 - Visual timeline (thumbnails), `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
 
@@ -138,7 +140,7 @@ Preview: QMediaPlayer on working_file / exported_path
 
 ## 6. Remaining work (ordered)
 
-P0 is done. Complete the rest in order. Each item is one PR unless noted.
+P0–P4 are done (P3 GitHub run waits on a PR). Complete the rest in order. Each item is one PR unless noted.
 
 ### P0 — Hygiene — **done**
 
@@ -147,7 +149,7 @@ P0 is done. Complete the rest in order. Each item is one PR unless noted.
 - FEATURE_COMPARISON and ARCHITECTURE `export` op match the code
 - Desktop package deps are PySide6 / platformdirs / keyring (Vex stack stays in the Vex venv)
 
-### P1 — Export preset menu
+### P1 — Export preset menu — **done**
 
 **Goal:** User can export Instagram / TikTok / X / podcast audio without typing a preset id.
 
@@ -159,7 +161,7 @@ P0 is done. Complete the rest in order. Each item is one PR unless noted.
 | **Verify** | Stub: parametrize `export` for `tiktok` and `podcast_audio`; assert file suffix. UI: one pytest-qt test that opens the menu is optional; service tests are enough. |
 | **Done when** | `pytest tests/test_export.py` covers at least two presets besides `youtube_1080p`. |
 
-### P2 — Failed-export and QA copy in chat
+### P2 — Failed-export and QA copy in chat — **done**
 
 **Goal:** Failures look like the CLI, not a hang.
 
@@ -171,7 +173,7 @@ P0 is done. Complete the rest in order. Each item is one PR unless noted.
 | **Verify** | `pytest` UI test: empty window → Export → transcript contains “Load a video”. |
 | **Done when** | That test passes; no new CLI shorts runs were used. |
 
-### P3 — pytest on every PR
+### P3 — pytest on every PR — **done** (workflow present; first green run waits on a PR)
 
 **Goal:** Layout and stub export cannot regress unnoticed.
 
@@ -183,7 +185,7 @@ P0 is done. Complete the rest in order. Each item is one PR unless noted.
 | **Verify** | Open a PR; workflow is green; screenshots artifact contains `empty.png`. |
 | **Done when** | Main-branch PRs run stub tests automatically. |
 
-### P4 — Bundle FFmpeg with the app
+### P4 — Bundle FFmpeg with the app — **done** (unit test; frozen `dist/Vex` not rebuilt this session)
 
 **Goal:** End users do not need FFmpeg on `PATH`.
 

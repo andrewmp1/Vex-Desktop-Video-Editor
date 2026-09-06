@@ -9,7 +9,8 @@ import pytest
 from vex_desktop.agent.errors import ProjectError
 from vex_desktop.agent.service import AgentService
 from vex_desktop.agent.stub import StubBackend
-from vex_desktop.exporting import resolve_preset
+from vex_desktop.exporting import PRESETS, preset_label, preset_suffix, resolve_preset
+from vex_desktop.protocol import AgentResult, ProjectSnapshot
 
 
 def test_resolve_preset_youtube():
@@ -51,6 +52,23 @@ def test_stub_export_without_video_fails():
         service.handle("export", {"preset": "youtube_1080p"})
 
 
+@pytest.mark.parametrize("preset", ["tiktok", "podcast_audio"])
+def test_stub_export_preset_suffix(sample_video, tmp_path, monkeypatch, preset):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "share"))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    service = AgentService(StubBackend())
+    service.handle("load_project", {"video_path": str(sample_video)})
+    result = service.handle("export", {"preset": preset})
+    assert result.success
+    path = Path(result.exported_path)
+    assert path.suffix == preset_suffix(preset)
+    assert path.is_file() and path.stat().st_size > 0
+    if preset == "podcast_audio":
+        assert result.new_video is None
+    else:
+        assert result.new_video == str(path)
+
+
 def test_ui_export_from_toolbar(window, qtbot, sample_video, tmp_path, screenshot_dir):
     dest = tmp_path / "ui-export.mp4"
     window.open_source(str(sample_video))
@@ -63,6 +81,44 @@ def test_ui_export_from_toolbar(window, qtbot, sample_video, tmp_path, screensho
     assert pixmap.save(str(screenshot_dir / "exported-sample.png"), "PNG")
     assert dest.is_file() and dest.stat().st_size > 0
     assert "Exported" in window._chat.transcript()
+
+
+def test_export_menu_lists_presets(window):
+    labels = [action.text() for action in window._export_actions]
+    assert labels == [preset_label(preset) for preset in PRESETS]
+    assert "TikTok" in labels
+    assert "Podcast audio" in labels
+    assert "X" in labels
+
+
+def test_export_without_video_shows_chat_error(window, qtbot):
+    window._export_preset("youtube_1080p")
+    qtbot.waitUntil(lambda: "Load a video" in window._chat.transcript(), timeout=8000)
+    qtbot.waitUntil(lambda: not window._agent.busy, timeout=8000)
+    assert "Load a video" in window._chat.transcript()
+
+
+def test_failed_result_still_shows_message(window):
+    window._on_result(
+        AgentResult(
+            op="process_command",
+            success=False,
+            message="0 clips passed QA",
+            snapshot=ProjectSnapshot(backend="stub"),
+        )
+    )
+    assert "0 clips passed QA" in window._chat.transcript()
+
+
+def test_ui_export_tiktok_from_menu(window, qtbot, sample_video, tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "share"))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    window.open_source(str(sample_video))
+    qtbot.waitUntil(lambda: not window._agent.busy, timeout=8000)
+    window._export_preset("tiktok")
+    qtbot.waitUntil(lambda: "Exported" in window._chat.transcript(), timeout=8000)
+    qtbot.waitUntil(lambda: not window._agent.busy, timeout=8000)
+    assert "Exporting TikTok" in window._chat.transcript()
 
 
 def _probe(path: Path) -> dict[str, str]:

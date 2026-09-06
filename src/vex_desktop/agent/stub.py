@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 from vex_desktop.agent.errors import AgentError, ProjectError
-from vex_desktop.exporting import looks_like_export, resolve_preset
+from vex_desktop.exporting import looks_like_export, preset_suffix, resolve_preset
 from vex_desktop.platform_support import data_dir
 from vex_desktop.protocol import AgentResult, ProgressEvent, ProjectSnapshot
 
@@ -135,24 +135,27 @@ class StubBackend:
         if not source.is_file():
             raise ProjectError(f"Working file missing: {source}")
         resolved = resolve_preset(preset) or preset
+        suffix = preset_suffix(resolved)
         if output_path:
             dest = Path(output_path)
         else:
-            dest = data_dir() / "exports" / f"{source.stem}_{resolved}{source.suffix or '.mp4'}"
+            dest = data_dir() / "exports" / f"{source.stem}_{resolved}{suffix}"
         progress(ProgressEvent("export", "encode", f"Exporting {resolved}…", tool="export_video"))
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, dest)
         self._history.append(f"export {resolved}")
         self._redo.clear()
         snapshot = self.snapshot()
+        exported = str(dest)
+        preview = None if dest.suffix.lower() == ".mp3" else exported
         return AgentResult(
             op="export",
             success=True,
             message=f"Exported to {dest}",
             snapshot=snapshot,
             tools_called=["export_video"],
-            new_video=str(dest),
-            exported_path=str(dest),
+            new_video=preview,
+            exported_path=exported,
         )
 
     def set_config(self, provider: str, model: str) -> AgentResult:

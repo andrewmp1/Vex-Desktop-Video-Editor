@@ -14,7 +14,31 @@ PRESETS = (
     "podcast_audio",
 )
 
+PRESET_LABELS = {
+    "youtube_1080p": "YouTube 1080p",
+    "youtube_4k": "YouTube 4K",
+    "instagram_reels": "Instagram Reels",
+    "instagram_square": "Instagram Square",
+    "tiktok": "TikTok",
+    "twitter_x": "X",
+    "podcast_audio": "Podcast audio",
+}
+
+PRESET_SUFFIXES = {
+    "podcast_audio": ".mp3",
+}
+
 DEFAULT_PRESET = "youtube_1080p"
+DEFAULT_SUFFIX = ".mp4"
+
+
+def preset_label(preset: str) -> str:
+    return PRESET_LABELS.get(preset, preset.replace("_", " "))
+
+
+def preset_suffix(preset: str) -> str:
+    return PRESET_SUFFIXES.get(preset, DEFAULT_SUFFIX)
+
 
 _PLATFORM_PRESETS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\byoutube\s*(?:1080p|hd)?\b|\byt\b", re.IGNORECASE), "youtube_1080p"),

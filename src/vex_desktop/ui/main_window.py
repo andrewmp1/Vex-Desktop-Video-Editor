@@ -10,13 +10,16 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QSplitter,
     QStyle,
     QToolBar,
+    QToolButton,
 )
 
 from vex_desktop.agent.qt import AgentClient
+from vex_desktop.exporting import PRESETS, preset_label
 from vex_desktop.platform_support import ffmpeg_path, is_linux, is_macos
 from vex_desktop.protocol import AgentResult, ProgressEvent, ProjectSnapshot
 from vex_desktop.ui.chat_pane import ChatPane
@@ -38,6 +41,7 @@ class MainWindow(QMainWindow):
         if icon is not None and not icon.isNull():
             self.setWindowIcon(icon)
         self._snapshot = ProjectSnapshot()
+        self._export_actions: list[QAction] = []
 
         self._agent = AgentClient(self)
         self._agent.progress.connect(self._on_progress)
@@ -79,7 +83,7 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self._action("Open YouTube URL…", self._choose_youtube))
         file_menu.addAction(self._action("Open Project…", self._choose_project))
         file_menu.addSeparator()
-        file_menu.addAction(self._action("Export for YouTube", self._export_youtube))
+        file_menu.addMenu(self._make_export_menu("&Export", remember=True))
         file_menu.addSeparator()
         file_menu.addAction(self._action("Settings…", self._open_settings))
         file_menu.addSeparator()
@@ -104,10 +108,27 @@ class MainWindow(QMainWindow):
         bar.addAction(self._action("YouTube", self._choose_youtube))
         bar.addAction(self._action("Project", self._choose_project))
         bar.addSeparator()
-        bar.addAction(self._action("Export", self._export_youtube))
+        export_button = QToolButton()
+        export_button.setText("Export")
+        export_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        export_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        export_button.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
+        export_button.setMenu(self._make_export_menu("Export"))
+        bar.addWidget(export_button)
         bar.addSeparator()
         bar.addAction(self._action("Settings", self._open_settings))
         self.addToolBar(bar)
+
+    def _make_export_menu(self, title: str, remember: bool = False) -> QMenu:
+        menu = QMenu(title, self)
+        for preset in PRESETS:
+            action = QAction(preset_label(preset), self)
+            action.setData(preset)
+            action.triggered.connect(self._on_export_action)
+            menu.addAction(action)
+            if remember:
+                self._export_actions.append(action)
+        return menu
 
     def _action(self, text: str, slot, shortcut=None) -> QAction:
         action = QAction(text, self)
@@ -199,9 +220,17 @@ class MainWindow(QMainWindow):
         self._chat.set_progress(event.message)
 
     @Slot()
-    def _export_youtube(self) -> None:
-        self._chat.append_system("Exporting for YouTube…")
-        self._agent.export("youtube_1080p")
+    def _on_export_action(self) -> None:
+        action = self.sender()
+        if not isinstance(action, QAction):
+            return
+        preset = str(action.data() or "")
+        if preset:
+            self._export_preset(preset)
+
+    def _export_preset(self, preset: str) -> None:
+        self._chat.append_system(f"Exporting {preset_label(preset)}…")
+        self._agent.export(preset)
 
     @Slot(object)
     def _on_result(self, result: AgentResult) -> None:
@@ -211,6 +240,8 @@ class MainWindow(QMainWindow):
                 self._chat.append_agent(result.message)
             else:
                 self._chat.append_system(result.message)
+        if not result.success:
+            return
         video = result.exported_path or result.new_video or result.snapshot.working_file
         if video and result.op in {"load_project", "process_command", "undo", "redo", "export"}:
             if not str(video).lower().endswith(".mp3"):
