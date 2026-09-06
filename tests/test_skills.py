@@ -57,17 +57,37 @@ def test_compose_preamble_format():
 
 def test_compose_preamble_per_skill_cap():
     body = "A" * 50
+    marker = "[skill Big truncated]"
     text, warnings = compose_preamble(
         [("Big", body)],
         "cmd",
-        per_cap=20,
+        per_cap=40,
         total_cap=16000,
     )
-    assert "[skill Big truncated]" in text
-    assert "A" * 20 in text
-    assert "A" * 21 not in text.split("[skill Big truncated]")[0]
+    assert marker in text
+    assert "=== Skill: Big ===" in text
+    before_marker = text.split(marker, 1)[0]
+    # Marker counts inside per_cap, so body slice is shorter than per_cap.
+    assert "A" * (40 - len(marker)) in before_marker
+    assert "A" * (40 - len(marker) + 1) not in before_marker.split("=== Skill: Big ===\n", 1)[-1]
     assert warnings
-    assert any("Big" in w for w in warnings)
+    assert any("Big" in w and "truncated" in w.lower() for w in warnings)
+
+
+def test_compose_preamble_equal_caps_includes_truncated():
+    """Regression: per_cap == total_cap must still emit truncated skills."""
+    body = "X" * 100
+    text, warnings = compose_preamble(
+        [("Huge", body)],
+        "cmd",
+        per_cap=50,
+        total_cap=50,
+    )
+    assert "=== Skill: Huge ===" in text
+    assert "[skill Huge truncated]" in text
+    assert "User command: cmd" in text
+    assert any("truncated" in w.lower() for w in warnings)
+    assert not any("skip" in w.lower() for w in warnings)
 
 
 def test_compose_preamble_total_cap_skips_remaining():
@@ -78,9 +98,9 @@ def test_compose_preamble_total_cap_skips_remaining():
         total_cap=40,
     )
     assert "=== Skill: One ===" in text
-    assert "=== Skill: Two ===" not in text or "=== Skill: Three ===" not in text
-    assert "Three" not in text or any("skip" in w.lower() or "total" in w.lower() or "cap" in w.lower() for w in warnings)
-    assert warnings
+    assert "=== Skill: Two ===" not in text
+    assert "=== Skill: Three ===" not in text
+    assert any("total" in w.lower() or "skip" in w.lower() for w in warnings)
     assert "User command: cmd" in text
 
 

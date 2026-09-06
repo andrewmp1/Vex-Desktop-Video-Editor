@@ -236,7 +236,11 @@ def compose_preamble(
 
         content = body
         if len(content) > per_cap:
-            content = content[:per_cap] + f"[skill {name} truncated]"
+            marker = f"[skill {name} truncated]"
+            # Keep marker inside per_cap so truncated skills still fit when
+            # per_cap <= total_cap (defaults are equal).
+            body_limit = max(0, per_cap - len(marker))
+            content = content[:body_limit] + marker
             warnings.append(
                 f"Skill '{name}' truncated to {per_cap} characters (per-skill cap)"
             )
