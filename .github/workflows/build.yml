@@ -83,12 +83,51 @@ jobs:
             dist/Vex.dmg
             dist/Vex.app
 
-      - name: Attach DMG to GitHub Release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Vex-linux
+          path: artifacts/linux
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Vex-macOS
+          path: artifacts/macos
+
+      - name: Stage release files
+        run: |
+          set -euo pipefail
+          mkdir -p dist-release
+          appimage="$(find artifacts/linux -name 'Vex-*.AppImage' -type f | head -n 1)"
+          dmg="$(find artifacts/macos -name 'Vex.dmg' -type f | head -n 1)"
+          if [ -z "$appimage" ] || [ -z "$dmg" ]; then
+            echo "Missing AppImage or DMG"
+            find artifacts -type f
+            exit 1
+          fi
+          cp "$appimage" dist-release/Vex-x86_64.AppImage
+          cp "$dmg" dist-release/Vex.dmg
+          cd dist-release
+          sha256sum Vex-x86_64.AppImage Vex.dmg > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/Vex.dmg
+          files: |
+            dist-release/Vex-x86_64.AppImage
+            dist-release/Vex.dmg
+            dist-release/SHA256SUMS
           generate_release_notes: true
           draft: false
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

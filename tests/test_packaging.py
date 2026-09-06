@@ -66,3 +66,14 @@ def test_macos_ci_writes_dist_dmg():
     assert "dist/Vex.dmg" in workflow
     assert "Skipping notarization" in workflow
     assert "|| true" not in workflow
+
+
+def test_tag_release_attaches_appimage_dmg_and_checksums():
+    workflow = (ROOT / ".github" / "workflows" / "build.yml").read_text(encoding="utf-8")
+    assert "needs: [build-linux, build-macos]" in workflow
+    assert "Vex-x86_64.AppImage" in workflow
+    assert "Vex.dmg" in workflow
+    assert "SHA256SUMS" in workflow
+    assert "softprops/action-gh-release@v2" in workflow
+    assert "fail_on_unmatched_files: true" in workflow
+    assert workflow.count("action-gh-release") == 1

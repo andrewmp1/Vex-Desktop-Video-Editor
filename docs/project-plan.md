@@ -105,6 +105,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 - PyInstaller spec collects `ffmpeg`; `ffmpeg_path()` checks the executable dir and `_internal/`
 - Linux AppImage (`scripts/build_appimage.sh`; local `dist/Vex-x86_64.AppImage` smoke-launches)
 - macOS DMG script + CI (`scripts/build_dmg.sh` → `dist/Vex.dmg`; notarize skipped without secrets)
+- GitHub Release on `v*` tags attaches AppImage, DMG, and `SHA256SUMS`
 - Automated tests: UI smoke + screenshots, stub export, core+ffmpeg export (skip in desktop venv)
 - Layout fixes verified via `tests/screenshots/`
 - App icon (`assets/icon.png`, window + PyInstaller)
@@ -112,7 +113,6 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 ### Not done
 
-- GitHub Release assets (AppImage + DMG on one tag)
 - End-user documentation
 - Visual timeline (thumbnails), `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
 
@@ -142,7 +142,7 @@ Preview: QMediaPlayer on working_file / exported_path
 
 ## 6. Remaining work (ordered)
 
-P0–P6 are in tree (P3/P5/P6 GitHub runs wait on a remote build or tag). Complete the rest in order.
+P0–P7 are in tree (CI/tag verify waits on a remote build). Complete the rest in order.
 
 ### P0 — Hygiene — **done**
 
@@ -223,7 +223,7 @@ P0–P6 are in tree (P3/P5/P6 GitHub runs wait on a remote build or tag). Comple
 | **Verify** | Tag `v0.1.0-test`; Actions macOS job uploads a DMG. Open on a Mac if available; otherwise CI success is the gate. |
 | **Done when** | Tagged builds publish a DMG artifact. |
 
-### P7 — GitHub Release
+### P7 — GitHub Release — **done** (workflow present; first assets wait on a `v*` tag)
 
 **Goal:** One tag produces Linux AppImage + macOS DMG as release assets.
 

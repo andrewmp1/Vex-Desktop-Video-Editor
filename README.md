@@ -54,3 +54,4 @@ bash scripts/build_dmg.sh
 
 - Linux: `dist/Vex-x86_64.AppImage` (relocatable `dist/Vex/` is kept as a backup)
 - macOS: `dist/Vex.dmg` (and `dist/Vex.app`)
+- GitHub Release (tag `v*`): AppImage + DMG + `SHA256SUMS`. No Mac App Store.

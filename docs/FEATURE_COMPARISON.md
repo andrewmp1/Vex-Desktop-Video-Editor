@@ -12,5 +12,5 @@ Updated 2026-09-05. Canonical remaining work: [project-plan.md](project-plan.md)
 | Export YouTube 1080p | Yes (`export` op + chat + File → Export) | Yes |
 | Other export presets | File → Export / toolbar menu (Instagram, TikTok, X, podcast audio) | Yes |
 | Auto shorts / B-roll / visuals | Via chat to core only; no dedicated UI | Yes |
-| Packaging | Linux AppImage + macOS DMG scripts; GitHub Release is P7 | N/A |
+| Packaging | AppImage + DMG; tag `v*` GitHub Release with checksums | N/A |
 | Tests | pytest-qt + stub/core export | Large CLI suite |
