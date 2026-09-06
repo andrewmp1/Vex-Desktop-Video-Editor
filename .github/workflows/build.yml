@@ -49,54 +49,45 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install ffmpeg
+          brew install ffmpeg create-dmg
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Build with PyInstaller
-        run: pyinstaller vex.spec
-
-      - name: Create DMG installer
-        run: |
-          brew install create-dmg
-          create-dmg \
-            --volname "Vex" \
-            --window-pos 200 120 \
-            --window-size 800 400 \
-            --icon-size 100 \
-            --icon "Vex.app" 200 190 \
-            --hide-extension "Vex.app" \
-            --app-drop-link 600 185 \
-            --no-internet-enable \
-            "Vex.dmg" \
-            "dist/Vex.app" || true
+      - name: Build DMG
+        run: bash scripts/build_dmg.sh
 
       # Optional Gatekeeper signing for GitHub downloads — not App Store.
-      - name: Notarize and Staple (requires secrets)
+      - name: Notarize and Staple
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          if [ ! -f Vex.dmg ]; then echo "No DMG to notarize"; exit 0; fi
-          xcrun notarytool submit "Vex.dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
-          xcrun stapler staple "Vex.dmg"
+          if [ -z "$APPLE_ID" ] || [ -z "$APPLE_PASSWORD" ] || [ -z "$APPLE_TEAM_ID" ]; then
+            echo "Skipping notarization (APPLE_* secrets not set)"
+            exit 0
+          fi
+          if [ ! -f dist/Vex.dmg ]; then
+            echo "dist/Vex.dmg is missing"
+            exit 1
+          fi
+          xcrun notarytool submit "dist/Vex.dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "dist/Vex.dmg"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Vex-macOS
           path: |
-            Vex.dmg
+            dist/Vex.dmg
             dist/Vex.app
 
-      - name: Create GitHub Release
+      - name: Attach DMG to GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            Vex.dmg
+          files: dist/Vex.dmg
           generate_release_notes: true
           draft: false
         env:

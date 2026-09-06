@@ -77,6 +77,9 @@ app = BUNDLE(
     info_plist={
         "CFBundleName": "Vex",
         "CFBundleDisplayName": "Vex Desktop Video Editor",
+        "CFBundleShortVersionString": "0.1.0",
+        "CFBundleVersion": "0.1.0",
+        "LSApplicationCategoryType": "public.app-category.video",
         "NSHighResolutionCapable": True,
     },
 )

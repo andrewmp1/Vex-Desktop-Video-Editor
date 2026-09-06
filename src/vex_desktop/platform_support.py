@@ -63,6 +63,16 @@ def ffmpeg_path() -> str | None:
         exe_dir / "ffmpeg",
         exe_dir / "_internal" / "ffmpeg",
     ]
+    if sys.platform == "darwin":
+        contents = exe_dir.parent
+        candidates.extend(
+            [
+                contents / "MacOS" / "ffmpeg",
+                contents / "MacOS" / "_internal" / "ffmpeg",
+                contents / "Frameworks" / "ffmpeg",
+                contents / "Resources" / "ffmpeg",
+            ]
+        )
     meipass = getattr(sys, "_MEIPASS", None)
     if meipass:
         candidates.append(Path(meipass) / "ffmpeg")

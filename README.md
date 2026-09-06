@@ -48,9 +48,9 @@ PyInstaller cannot cross-compile. Build on each OS, then attach the files to a G
 # Linux AppImage (also writes dist/Vex/)
 bash scripts/build_appimage.sh
 
-# macOS (on a Mac)
-pyinstaller vex.spec
+# macOS DMG (on a Mac; also writes dist/Vex.app)
+bash scripts/build_dmg.sh
 ```
 
 - Linux: `dist/Vex-x86_64.AppImage` (relocatable `dist/Vex/` is kept as a backup)
-- macOS: `dist/Vex.app` (wrap as a DMG for download)
+- macOS: `dist/Vex.dmg` (and `dist/Vex.app`)

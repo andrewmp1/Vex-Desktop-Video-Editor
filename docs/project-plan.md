@@ -104,6 +104,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 - Stub pytest workflow on pull requests (`.github/workflows/test.yml`)
 - PyInstaller spec collects `ffmpeg`; `ffmpeg_path()` checks the executable dir and `_internal/`
 - Linux AppImage (`scripts/build_appimage.sh`; local `dist/Vex-x86_64.AppImage` smoke-launches)
+- macOS DMG script + CI (`scripts/build_dmg.sh` → `dist/Vex.dmg`; notarize skipped without secrets)
 - Automated tests: UI smoke + screenshots, stub export, core+ffmpeg export (skip in desktop venv)
 - Layout fixes verified via `tests/screenshots/`
 - App icon (`assets/icon.png`, window + PyInstaller)
@@ -111,7 +112,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 ### Not done
 
-- macOS DMG on CI / GitHub Release assets
+- GitHub Release assets (AppImage + DMG on one tag)
 - End-user documentation
 - Visual timeline (thumbnails), `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
 
@@ -141,7 +142,7 @@ Preview: QMediaPlayer on working_file / exported_path
 
 ## 6. Remaining work (ordered)
 
-P0–P5 are in tree (P3 GitHub run and P5 CI artifact wait on a remote build). Complete the rest in order.
+P0–P6 are in tree (P3/P5/P6 GitHub runs wait on a remote build or tag). Complete the rest in order.
 
 ### P0 — Hygiene — **done**
 
@@ -210,7 +211,7 @@ P0–P5 are in tree (P3 GitHub run and P5 CI artifact wait on a remote build). C
 | **Verify** | On this machine: `chmod +x Vex-*.AppImage && ./Vex-*.AppImage` opens the stub or core UI. `pytest` still passes (does not replace tests). |
 | **Done when** | A local AppImage launches; CI produces the same artifact on tag. |
 
-### P6 — macOS DMG on CI
+### P6 — macOS DMG on CI — **done** (script + workflow; first DMG waits on a macOS runner / tag)
 
 **Goal:** GitHub Release can attach a DMG. Build **on macOS** (`macos-14`); cannot cross-compile from Linux.
 

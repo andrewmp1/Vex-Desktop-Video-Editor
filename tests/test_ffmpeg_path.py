@@ -26,6 +26,25 @@ def test_ffmpeg_path_prefers_sibling_of_executable(tmp_path, monkeypatch):
     assert ffmpeg_path() == str(bundled)
 
 
+def test_ffmpeg_path_finds_macos_app_bundle(tmp_path, monkeypatch):
+    from vex_desktop.platform_support import ffmpeg_path
+
+    macos = tmp_path / "Vex.app" / "Contents" / "MacOS"
+    macos.mkdir(parents=True)
+    fake_app = macos / "Vex"
+    fake_app.write_bytes(b"")
+    bundled = macos / "_internal" / "ffmpeg"
+    bundled.parent.mkdir()
+    bundled.write_bytes(b"")
+    bundled.chmod(0o755)
+
+    monkeypatch.setattr(sys, "executable", str(fake_app))
+    monkeypatch.setattr(sys, "platform", "darwin")
+    _clear_ffmpeg_env(monkeypatch, tmp_path)
+
+    assert ffmpeg_path() == str(bundled)
+
+
 def test_ffmpeg_path_finds_pyinstaller_internal(tmp_path, monkeypatch):
     from vex_desktop.platform_support import ffmpeg_path
 
