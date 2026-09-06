@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 OPS = (
     "load_project",
@@ -20,6 +20,10 @@ OPS = (
     "cancel",
     "set_config",
     "export",
+    "list_skills",
+    "import_skill",
+    "remove_skill",
+    "set_skills",
 )
 
 
@@ -77,6 +81,7 @@ class AgentResult:
     suggestions: list[str] = field(default_factory=list)
     new_video: str | None = None
     exported_path: str | None = None
+    skills: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -100,6 +105,7 @@ class AgentResult:
             suggestions=list(data.get("suggestions") or []),
             new_video=data.get("new_video"),
             exported_path=data.get("exported_path"),
+            skills=list(data.get("skills") or []),
         )
 
 

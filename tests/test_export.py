@@ -46,6 +46,28 @@ def test_stub_export_via_chat_command(sample_video, tmp_path, monkeypatch):
     assert "export youtube_1080p" in result.snapshot.history
 
 
+def test_export_chat_still_resolves_youtube(sample_video, tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "share"))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    store_dir = tmp_path / "share" / "Vex" / "skills"
+    store_dir.mkdir(parents=True)
+    skill_dir = store_dir / "guide"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text(
+        "---\nname: Guide\n---\nPrefer 9:16 and mention tiktok often.\n",
+        encoding="utf-8",
+    )
+    service = AgentService(StubBackend())
+    service.handle("load_project", {"video_path": str(sample_video)})
+    service.handle("set_skills", {"ids": ["guide"]})
+    result = service.handle("process_command", {"command": "export for youtube"})
+    assert result.success
+    assert result.exported_path
+    assert Path(result.exported_path).is_file()
+    assert "export youtube_1080p" in result.snapshot.history
+    assert "=== Skill:" not in result.message
+
+
 def test_stub_export_without_video_fails():
     service = AgentService(StubBackend())
     with pytest.raises(ProjectError):

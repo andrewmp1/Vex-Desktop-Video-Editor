@@ -1,9 +1,11 @@
-"""Unit tests for SkillStore, SkillState, and compose_preamble."""
+"""Unit tests for SkillStore, SkillState, compose_preamble, and injection."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from vex_desktop.agent.service import AgentService
+from vex_desktop.agent.stub import StubBackend
 from vex_desktop.skills import SkillState, SkillStore, compose_preamble
 
 
@@ -175,3 +177,59 @@ def test_skill_state_round_trip(tmp_path):
     loaded = SkillState(tmp_path)
     assert loaded.enabled == ["a", "b"]
     assert loaded.seeded is True
+
+
+def _enable_skill_on_disk(tmp_path: Path, monkeypatch, skill_id: str, name: str, body: str) -> None:
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "share"))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    store_dir = tmp_path / "share" / "Vex" / "skills"
+    store_dir.mkdir(parents=True)
+    skill_dir = store_dir / skill_id
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text(
+        f"---\nname: {name}\ndescription: A desc\n---\n{body}",
+        encoding="utf-8",
+    )
+
+
+def test_process_command_injects_enabled_skill(sample_video, tmp_path, monkeypatch):
+    _enable_skill_on_disk(tmp_path, monkeypatch, "named", "Named", "Do X.\n")
+    service = AgentService(StubBackend())
+    service.handle("load_project", {"video_path": str(sample_video)})
+    enabled = service.handle("set_skills", {"ids": ["named"]})
+    assert enabled.success
+    result = service.handle("process_command", {"command": "Trim the first 10 seconds"})
+    assert result.success
+    assert "=== Skill:" in result.message
+    assert "User command: Trim the first 10 seconds" in result.message
+
+
+def test_process_command_omits_skill_when_disabled(sample_video, tmp_path, monkeypatch):
+    _enable_skill_on_disk(tmp_path, monkeypatch, "named", "Named", "Do X.\n")
+    service = AgentService(StubBackend())
+    service.handle("load_project", {"video_path": str(sample_video)})
+    service.handle("set_skills", {"ids": ["named"]})
+    service.handle("set_skills", {"ids": []})
+    result = service.handle("process_command", {"command": "Trim the first 10 seconds"})
+    assert result.success
+    assert "=== Skill:" not in result.message
+    assert "User command:" not in result.message
+    assert "Trim the first 10 seconds" in result.message
+
+
+def test_skill_body_export_word_does_not_steal_edit(sample_video, tmp_path, monkeypatch):
+    _enable_skill_on_disk(
+        tmp_path,
+        monkeypatch,
+        "guide",
+        "Guide",
+        "When relevant, export for youtube using 1080p.\n",
+    )
+    service = AgentService(StubBackend())
+    service.handle("load_project", {"video_path": str(sample_video)})
+    service.handle("set_skills", {"ids": ["guide"]})
+    result = service.handle("process_command", {"command": "Trim the first 10 seconds"})
+    assert result.success
+    assert result.exported_path is None
+    assert "=== Skill:" in result.message
+    assert "User command: Trim the first 10 seconds" in result.message

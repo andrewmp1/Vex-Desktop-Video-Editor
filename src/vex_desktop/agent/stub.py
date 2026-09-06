@@ -10,6 +10,16 @@ from vex_desktop.exporting import looks_like_export, preset_suffix, resolve_pres
 from vex_desktop.platform_support import data_dir
 from vex_desktop.protocol import AgentResult, ProgressEvent, ProjectSnapshot
 
+_USER_COMMAND_MARK = "User command: "
+
+
+def _user_command(command: str) -> str:
+    """Export routing looks at the user command, not injected skill bodies."""
+    idx = command.rfind(_USER_COMMAND_MARK)
+    if idx >= 0:
+        return command[idx + len(_USER_COMMAND_MARK) :]
+    return command
+
 
 class StubBackend:
     name = "stub"
@@ -50,8 +60,9 @@ class StubBackend:
         command = command.strip()
         if not command:
             raise AgentError("Empty command")
-        if looks_like_export(command):
-            preset = resolve_preset(command)
+        user_command = _user_command(command)
+        if looks_like_export(user_command):
+            preset = resolve_preset(user_command)
             if preset is None:
                 raise AgentError("Unknown export preset.")
             result = self.export(preset, None, progress)
