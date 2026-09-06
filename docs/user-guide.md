@@ -79,7 +79,7 @@ Type a plain-language instruction and press Enter or **Send**. Examples:
 - `Add subtitles`
 - `Undo` / **Edit → Undo** (also **Edit → Redo**, **Edit → Cancel**)
 
-The timeline pane lists history from the agent snapshot. Preview plays the working file after a successful edit. It is not the edit engine; FFmpeg/Vex write files off the UI thread.
+The timeline pane shows a filmstrip of frames from the current working file. Click a frame to seek the preview. Edit history under the filmstrip still comes from the agent snapshot (undo/redo). Preview plays the working file after a successful edit. It is not the edit engine; FFmpeg/Vex write files off the UI thread.
 
 ## Export
 

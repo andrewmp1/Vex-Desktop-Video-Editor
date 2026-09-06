@@ -22,6 +22,7 @@ VIDEO_SUFFIXES = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"}
 
 class PreviewPane(QWidget):
     file_dropped = Signal(str)
+    position_changed = Signal(int)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -87,6 +88,10 @@ class PreviewPane(QWidget):
     def current_path(self) -> str | None:
         return self._path
 
+    def seek(self, ms: int) -> None:
+        if self._path:
+            self._player.setPosition(max(0, int(ms)))
+
     def load(self, path: str) -> None:
         file_path = Path(path)
         if not file_path.is_file():
@@ -134,6 +139,7 @@ class PreviewPane(QWidget):
         if not self._position.isSliderDown():
             self._position.setValue(position)
         self._time.setText(f"{_fmt(position)} / {_fmt(self._player.duration())}")
+        self.position_changed.emit(position)
 
     @Slot(int)
     def _on_duration(self, duration: int) -> None:

@@ -39,7 +39,7 @@ The product is the **agent protocol**, not the window. The PySide6 app is one cl
 - `vex_desktop.ui` may import `vex_desktop.agent.qt.AgentClient` and `vex_desktop.protocol` only.
 - UI code must not import `vex_core`, `StubBackend`, `VexCoreBackend`, or `AgentService`.
 - All agent ops (`load_project`, `process_command`, `undo`, `redo`, `set_config`, `export`) run on a worker `QThread`.
-- Preview plays `snapshot.working_file` or `exported_path`. It never runs FFmpeg.
+- Preview plays `snapshot.working_file` or `exported_path`. Agent edits still go through FFmpeg/Vex off the UI thread. The TIMELINE filmstrip may run `platform_support.ffmpeg_path()` on a worker thread to grab stills; it must not import `vex_core` or `tools.*`.
 
 ## Protocol
 

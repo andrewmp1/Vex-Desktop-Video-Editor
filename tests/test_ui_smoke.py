@@ -40,6 +40,18 @@ def test_open_sample_video_updates_preview(window, qtbot, sample_video, screensh
     )
     qtbot.waitUntil(lambda: not window._agent.busy, timeout=8000)
     qtbot.wait(400)
+    qtbot.waitUntil(lambda: window._timeline.thumbnail_count() >= 1, timeout=20000)
     _grab(window, screenshot_dir, "loaded-sample.png")
     assert window._preview.current_path == str(sample_video)
     assert sample_video.name in window._chat.transcript()
+    assert window._timeline.thumbnail_count() >= 1
+
+
+def test_timeline_keeps_history_after_edit(window, qtbot, sample_video):
+    window.open_source(str(sample_video))
+    qtbot.waitUntil(lambda: not window._agent.busy, timeout=8000)
+    qtbot.waitUntil(lambda: window._timeline.thumbnail_count() >= 1, timeout=20000)
+    window._chat.submit_text("Trim the first 10 seconds")
+    qtbot.waitUntil(lambda: not window._agent.busy, timeout=8000)
+    assert "Trim the first 10 seconds" in window._snapshot.history
+    assert window._timeline.thumbnail_count() >= 1

@@ -64,9 +64,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(splitter)
 
         self._preview.file_dropped.connect(self._open_source)
+        self._preview.position_changed.connect(self._timeline.set_playhead)
         self._chat.command_submitted.connect(self._on_command)
         self._timeline.undo_requested.connect(self._agent.undo)
         self._timeline.redo_requested.connect(self._agent.redo)
+        self._timeline.seek_requested.connect(self._preview.seek)
 
         self._build_menu()
         self._build_toolbar()
@@ -74,6 +76,7 @@ class MainWindow(QMainWindow):
         self._chat.focus_input()
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+        self._timeline.shutdown()
         self._agent.shutdown()
         super().closeEvent(event)
 

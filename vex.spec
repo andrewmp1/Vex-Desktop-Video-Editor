@@ -10,6 +10,9 @@ if not _ffmpeg:
         "ffmpeg not found. Install it on PATH or place a static binary at vendor/ffmpeg before pyinstaller vex.spec."
     )
 BINARIES = [(str(_ffmpeg), ".")]
+_ffprobe = Path(str(_ffmpeg)).with_name("ffprobe")
+if _ffprobe.is_file():
+    BINARIES.append((str(_ffprobe), "."))
 
 a = Analysis(
     [str(ROOT / "main.py")],

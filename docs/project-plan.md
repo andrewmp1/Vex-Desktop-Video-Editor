@@ -4,7 +4,7 @@
 
 **Last updated:** 2026-09-06
 
-This document is the implementation guide. Architecture details live in [ARCHITECTURE.md](ARCHITECTURE.md). Stack choices live in [TECH_DECISIONS.md](TECH_DECISIONS.md). The agent API lives in [API_WRAPPER_SPEC.md](API_WRAPPER_SPEC.md).
+This document is the implementation guide. Architecture details live in [ARCHITECTURE.md](ARCHITECTURE.md). Stack choices live in [TECH_DECISIONS.md](TECH_DECISIONS.md). The agent API lives in [API_WRAPPER_SPEC.md](API_WRAPPER_SPEC.md). Feature specs and TDD plans live under [superpowers/](superpowers/README.md).
 
 Do not start a later work item until its **Depends on** items are done and its **Verify** command has been run.
 
@@ -107,6 +107,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 - macOS DMG script + CI (`scripts/build_dmg.sh` → `dist/Vex.dmg`; notarize skipped without secrets)
 - GitHub Release on `v*` tags attaches AppImage, DMG, and `SHA256SUMS`
 - User guide (`docs/user-guide.md`, linked from README)
+- Visual timeline filmstrip (thumbnails from the working file; history list unchanged)
 - Automated tests: UI smoke + screenshots, stub export, core+ffmpeg export (skip in desktop venv)
 - Layout fixes verified via `tests/screenshots/`
 - App icon (`assets/icon.png`, window + PyInstaller)
@@ -114,7 +115,7 @@ VEX_CORE_PATH=~/claude_work/vex \
 
 ### Not done
 
-- Visual timeline (thumbnails), `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
+- `.vex` project format, Ollama as a first-class run mode, B-roll UI beyond chat
 
 ### Known limits (not bugs to “fix” unless specified)
 
@@ -257,7 +258,7 @@ Do these only after P7, and only if still wanted:
 |------|--------|
 | Ollama | Settings already has an `ollama` provider; wire `VexCoreBackend.set_config` to Vex `PROVIDER=ollama` and confirm with a local model |
 | B-roll / subtitles / effects | Chat `process_command` already reaches `VideoAgent.run`; no extra op unless the UI needs dedicated buttons |
-| Visual timeline | Thumbnails from working file; keep using `snapshot.history` as source of truth |
+| Visual timeline | **Done:** filmstrip from `working_file`; `snapshot.history` is still the edit list |
 | `.vex` bundle | Optional zip of a Vex project dir; CLI already uses folder JSON |
 | Gatekeeper notarization | Only if unsigned GitHub DMGs are blocked; not App Store |
 
